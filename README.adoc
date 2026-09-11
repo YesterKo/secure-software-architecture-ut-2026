@@ -8,9 +8,8 @@ This repository is the official team workspace for the Secure Software Architect
 
 * Team name: TODO
 * Members:
-** TODO
-** TODO
-** TODO, optional
+** Rasmus Meos
+** Jesper Korsen
 
 == Project scenario
 
