@@ -6,13 +6,13 @@
 
 List 5-8 goals that explain what the Citizen Services Portal should achieve.
 
-* The system must provide value to the citizen by aggregating seperate government services onto one platform.
-* The system must keep citizen's personal data confidential from all other parties, unless permission is given for it by the citizen, or is absolutely necessary.
-* The system must provide accurate and up-to-date data to residents.
-* The system should be convenient to use for the general citizen.
-* The system should enable timely delivery of important notifications to citizens about their data and the services that they use.
-* The system should provide value to the service provider organizations by enabling quicker sharing of citizen data between service provider organizations.
-* The new system should lower the running costs compared to the old system.
+* The portal must provide value to the citizen by aggregating seperate government services onto one platform.
+* The portal must keep citizen's personal data confidential from all other parties, unless permission is given for it by the citizen, or is absolutely necessary.
+* The portal must provide accurate and up-to-date data to residents.
+* The portal should be convenient to use for the general citizen.
+* The portal should enable timely delivery of important notifications to citizens about their data and the services that they use.
+* The portal should provide value to the service provider organizations by enabling quicker sharing of citizen data between service provider organizations.
+* The new portal should lower the running costs compared to the old system.
 
 == Stakeholders
 
