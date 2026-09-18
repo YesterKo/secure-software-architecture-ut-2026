@@ -9,19 +9,19 @@
 
 == Working agreement
 
-* Communication channel:
-* Expected response time:
-* Weekly meeting time:
-* Division of work:
-* Definition of done:
-* Conflict resolution:
+* Communication channel: Messenger
+* Expected response time: 1 day
+* Weekly meeting time: TBD
+* Division of work: Each work unit split between members
+* Definition of done: Work committed, optionally reviewed
+* Conflict resolution: Democracy
 
 == Course repository workflow
 
-* Team fork owner:
-* Instructors invited as collaborators: yes/no
-* Team members invited as collaborators: yes/no
-* Issue tracker or project board used: yes/no
+* Team fork owner: Jesper (YesterKo)
+* Instructors invited as collaborators: yes
+* Team members invited as collaborators: yes
+* Issue tracker or project board used: we try
 
 == Integrity
 
