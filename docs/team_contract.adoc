@@ -5,6 +5,7 @@
 
 * Rasmus Meos
 * Jesper Korsen
+* Hans Martin Tomingas
 
 == Working agreement
 
