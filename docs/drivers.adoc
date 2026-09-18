@@ -6,13 +6,14 @@
 
 List 5-8 goals that explain what the Citizen Services Portal should achieve.
 
-* The portal must provide value to the citizen by aggregating seperate government services onto one platform.
-* The portal must keep citizen's personal data confidential from all other parties, unless permission is given for it by the citizen, or is absolutely necessary.
-* The portal must provide accurate and up-to-date data to residents.
-* The portal should be convenient to use for the general citizen.
-* The portal should enable timely delivery of important notifications to citizens about their data and the services that they use.
-* The portal should provide value to the service provider organizations by enabling quicker sharing of citizen data between service provider organizations.
-* The new portal should lower the running costs compared to the old system.
+* Provide a unified digital entry point for citizens to access government services through a single, consistent interface instead of fragmented agency-specific portals.
+* Ensure confidentiality and privacy of personal data, enforcing strict access controls, data minimization, and transparency so citizens understand how their data is used.
+* Deliver accurate, authoritative, and up‑to‑date information by integrating securely with official registries and agency back-end systems.
+* Offer a convenient, intuitive user experience that reduces friction in accessing services, submitting cases, and receiving updates.
+* Enable timely and reliable notifications (email, SMS, push, inbox) for events such as case status changes, document requests, or security alerts.
+* Improve interoperability between agencies, enabling controlled, auditable data exchange that reduces manual work and accelerates service delivery.
+* Reduce operational and maintenance costs compared to legacy systems through modern architecture, automation, and clearer separation of responsibilities.
+* Support secure digital identity and delegation, allowing citizens to act on behalf of dependents or organizations when authorized.
 
 == Stakeholders
 
