@@ -23,12 +23,12 @@ Identify stakeholders and what each needs from the architecture.
 |===
 |Stakeholder |Need or concern
 
-|Residents/citizens |Use government services available on the portal
-|Service provider organizations/agencies |Access relevant citizen data from other service provider organizations
-|Administrators/helpdesk |TODO
-|Auditors/oversight |TODO
-|External registries/back-end systems |TODO
-|Operations/security teams |TODO
+|Residents/citizens |Access services easily; trust that their data is protected; understand how their data is used; receive timely notifications; complete workflows without technical issues.
+|Service provider organizations/agencies |Reliable, secure access to citizen data; clear API contracts; predictable integration patterns; auditability; minimal operational overhead.
+|Administrators/helpdesk |Tools for troubleshooting user issues; visibility into system health; ability to inspect audit logs; safe ways to assist users without violating privacy.
+|Auditors/oversight |Complete, immutable audit trails; transparency features; evidence of compliance with regulations; ability to trace data flows and decisions.
+|External registries/back-end systems |Predictable integration load; secure and authenticated access; clear failure-handling expectations; minimal disruption to existing systems.
+|Operations/security teams |Observability, monitoring, and alerting; secure deployment model; incident response workflows; clear trust boundaries; ability to enforce policies and detect anomalies.
 |===
 
 == Quality attributes and constraints
@@ -39,17 +39,46 @@ List 8-12 quality attributes or constraints.
 |===
 |ID |Driver |Why it matters
 
-|QA-001 |TODO |TODO
+|QA‑001 - Security & Privacy |The system handles sensitive personal data and must comply with national regulations (GDPR, sector‑specific laws). |Breaches or misuse of citizen data would cause legal violations, loss of public trust, and potential harm to individuals. Security is the primary architectural driver for all components.
+|QA‑002 - Availability |Citizens and agencies rely on the portal for critical services; downtime directly impacts public trust and service delivery. |Government services must remain accessible even during peak periods or emergencies. Outages disrupt essential workflows and damage credibility.
+|QA‑003 - Auditability |Every access, change, and data exchange must be traceable for compliance and oversight. |Without strong audit trails, the system cannot demonstrate lawful processing, detect misuse, or support investigations. Auditors require immutable, complete records.
+|QA‑004 - Interoperability |The portal must integrate with multiple external systems using stable, well‑defined interfaces. |Agencies use different technologies and legacy systems. Poor interoperability leads to fragile integrations, inconsistent data, and increased operational burden.
+|QA‑005 - Scalability |Usage may spike during elections, tax season, or emergencies; the system must scale without degradation. |Sudden load increases must not cause slowdowns or failures. Scalability ensures predictable performance and prevents service interruptions during national events.
+|QA‑006 - Usability |Citizens vary widely in digital literacy; poor UX leads to support burden and reduced adoption. |If the portal is confusing or frustrating, citizens will avoid it or overwhelm helpdesk teams. Usability directly affects adoption and satisfaction.
+|QA‑007 - Reliability & Fault Tolerance |External systems may fail; the portal must degrade gracefully and avoid data loss. |Many workflows depend on external registries. The portal must handle partial failures without corrupting data or blocking unrelated services.
+|QA‑008 - Maintainability |The system must evolve as new services and agencies join; architecture should minimize coupling and simplify onboarding. |Government services change frequently. High maintainability reduces long‑term costs and enables continuous improvement without major rewrites.
+|QA‑009 - Transparency |Citizens must understand how their data is accessed and by whom; transparency builds trust. |Lack of transparency leads to suspicion and complaints. Clear visibility into data usage is essential for compliance and citizen confidence.
+|QA‑010 - Regulatory Compliance |Must adhere to national digital identity standards, data retention rules, and public‑sector security baselines. |Non‑compliance results in legal penalties, forced shutdowns, and mandatory redesigns. Compliance shapes many architectural constraints.
+|QA‑011 - Performance |Core workflows (login, case submission, document upload) must respond quickly to avoid frustration. |Slow interactions reduce usability and increase abandonment rates. Performance is essential for citizen satisfaction and operational efficiency.
+|QA‑012 - Cost Constraints |Public‑sector budgets require efficient resource usage and predictable operational costs. |Architecture must avoid unnecessary complexity and expensive technologies. Cost efficiency ensures long‑term sustainability and political acceptance.
 |===
 
 == Assumptions
 
 List assumptions that may later need validation.
 
-* TODO
+* National digital identity (eID / OIDC provider) will remain stable and available with high uptime.
+* External registries provide reliable APIs with documented schemas.
+* Agencies agree on standardized data exchange formats.
+* Citizens primarily access the portal via modern browsers and mobile devices.
+* Document upload sizes and formats follow existing government guidelines.
+* Notification channels (SMS, email) are provided by trusted third-party services with SLAs (Service Level Agreements)
+* The portal will not replace agency-specific back-end systems, only integrate with them.
+* Delegation rules (acting on behalf of dependents/organizations) follow existing legal frameworks.
+* The system will operate in a government-managed cloud or data center environment.
+* All participating agencies accept the portal’s audit and logging requirements.
 
 == Open questions
 
 List open questions as questions, not as hidden assumptions.
 
-* TODO
+* What is the exact system boundary: does the portal store citizen data or only proxy it?
+* Which agency is responsible for identity lifecycle events (revocation, delegation changes)?
+* How will document retention policies differ across agencies?
+* What level of transparency is legally required for audit log visibility to citizens?
+* How will the portal behave when an external registry is unavailable: queue requests, show partial data, or block workflows?
+* Which workflows must be synchronous (real-time) versus asynchronous (event-driven)?
+* What is the expected peak load during national events (elections, tax deadlines)?
+* How will cross-agency authorization rules be defined and enforced?
+* Are there legacy systems that cannot support modern API standards?
+* What are the long-term expectations for onboarding new agencies or services?
