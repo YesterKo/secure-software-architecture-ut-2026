@@ -10,6 +10,7 @@ This repository is the official team workspace for the Secure Software Architect
 * Members:
 ** Rasmus Meos
 ** Jesper Korsen
+** Hans Martin Tomingas
 
 == Project scenario
 
