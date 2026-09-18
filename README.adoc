@@ -19,8 +19,8 @@ Start from link:docs/scenario.adoc[docs/scenario.adoc]. Keep a short project sum
 
 == Current status
 
-* Week: TODO
-* Main focus this week: TODO
+* Week: 2
+* Main focus this week: get written down stuff commited into git
 * Biggest open question: TODO
 * Biggest technical risk: TODO
 

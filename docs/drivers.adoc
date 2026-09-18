@@ -22,8 +22,8 @@ Identify stakeholders and what each needs from the architecture.
 |===
 |Stakeholder |Need or concern
 
-|Residents/citizens |TODO
-|Service provider organizations/agencies |TODO
+|Residents/citizens |Use government services available on the portal
+|Service provider organizations/agencies |Access relevant citizen data from other service provider organizations
 |Administrators/helpdesk |TODO
 |Auditors/oversight |TODO
 |External registries/back-end systems |TODO
