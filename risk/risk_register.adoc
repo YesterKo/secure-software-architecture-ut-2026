@@ -5,8 +5,46 @@
 |===
 |ID |Risk |Likelihood |Impact |Mitigation / treatment
 
-|R-001 |If TODO happens, then TODO impact occurs. |Low/Med/High |Low/Med/High |TODO
-|R-002 | | | |
+|R-000 |If TODO happens, then TODO impact occurs. |Low/Med/High |Low/Med/High |TODO
+|R-001 |If authorization or delegation rules differ between agencies, or changes to delegation are not reflected correctly, then users may gain access they should not have or legitimate users may be blocked from acting on behalf of another person or organization.|High |High |Define how authorization and delegation should work across agencies, including who makes access decisions, how delegation is granted or revoked, and how changes are propagated. Check the model against representative cross-agency scenarios.
+
+| R-002
+| If an external registry or agency backend becomes unavailable or responds too slowly, then workflows that depend on it may fail, become blocked, or show incomplete information to citizens.| High| High| Identify the main external dependencies and examine how the portal should behave when each one is slow or unavailable. Decide which interactions must happen immediately and which can be delayed, queued, or handled with limited functionality.
+
+| R-003| If important actions are not logged consistently or audit records can be changed, then security incidents and misuse may be difficult to reconstruct and the system may be unable to prove that data was handled correctly.| Medium| High
+| Define which important actions must be recorded, what information each audit entry needs, who may access the records, how long they are kept, and how their integrity is protected. Check that important citizen and administrator workflows can be traced afterwards.
+
+| R-004
+| If it is unclear which system owns each type of citizen data, then the portal may store unnecessary copies, use outdated information, or create confusion about who is responsible for keeping the data correct.
+| High
+| High
+| Identify the authoritative source for each important category of data and decide what the portal should store, cache temporarily, or fetch only when needed. Document the main data flows and ownership boundaries.
+
+| R-005
+| If the national identity provider is unavailable, changes its interface, or its identity information is handled incorrectly, then citizens may be unable to log in or identity-related operations may become insecure.
+| Medium
+| High
+| Define the authentication flow and the portal's trust relationship with the identity provider. Consider outages, expired or revoked credentials, validation failures, and interface changes, and decide how the portal should behave in each case.
+
+| R-006
+| If a service request involves several systems and only some of them complete their part successfully, then the systems may disagree about the request's state, causing lost, duplicated, or incorrectly displayed requests.| High| High
+| Model representative workflows that span several systems and identify where partial failures can happen. Decide how retries, duplicate requests, recovery, and incomplete operations should be handled so the systems eventually reach a consistent state.
+
+| R-007
+| If an agency changes its API, data format, or the meaning of exchanged data, then the portal's integration with that agency may stop working or require coordinated changes on both sides.| High| Medium| Define how external interfaces are versioned and changed, who is responsible for them, and what compatibility is expected. Check that both backward-compatible and breaking changes can be handled without unnecessarily affecting the rest of the portal.
+
+| R-008
+| If some agencies or legacy systems cannot use the same modern protocols or data formats as the portal, then each integration may require special handling and become harder and more expensive to maintain.| High| Medium
+| Identify several representative kinds of external systems, including older ones, and design the integration boundary so agency-specific differences do not spread throughout the portal. Validate the approach with at least one legacy-style integration example.
+
+| R-009
+| If national events or deadlines cause much higher traffic than normal, then login, request submission, document handling, or external integrations may become overloaded and critical services may become unavailable.| Medium
+| High
+| Estimate normal and peak usage, identify likely bottlenecks and external capacity limits, and use these estimates to evaluate how the most important parts of the system should scale and behave under overload.
+
+| R-010
+| If sensitive information is included in email, SMS, or other third-party notifications, then private information may be exposed outside the secure portal.| Medium| Medium
+| Decide what information may safely be included in each notification channel and what must remain inside the portal. Define the trust boundary with notification providers and keep sensitive details behind properly protected access.
 |===
 
 == Notes
