@@ -1,0 +1,62 @@
+= Iteration Plan
+
+[cols="1,3,3,2,4", options="header"]
+|===
+| Phase
+| Focus
+| Main artifact
+| Risks addressed
+| Evidence of risk reduction
+
+| 1
+| *System boundaries, identity, and access control*
+
+Clarify what data and responsibilities belong to the portal, how users are authenticated, and how authorization and delegation work across agencies.
+| Data ownership and trust-boundary sketch, together with an initial identity and delegation model.
+| R-001, R-004, R-005
+| Major data categories have an identified authoritative source.
+
+Representative citizen, organization, and delegation scenarios can be explained using the access-control model.
+
+Authentication behavior is defined for normal operation as well as identity-provider failures or revoked credentials.
+
+| 2
+| *External integrations and distributed workflows*
+
+Determine how the portal communicates with agency systems and how workflows behave when external systems fail, change, or only partially complete an operation.
+| Integration and failure-handling model for representative agency workflows.
+| R-002, R-006, R-007, R-008
+| Representative integrations cover both modern and legacy-style systems.
+
+Behavior is defined for unavailable or slow external systems.
+
+A multi-system workflow can recover from partial failure without losing or duplicating a request.
+
+Interface changes and versioning can be handled without requiring unrelated parts of the portal to change.
+
+| 3
+| *Auditability and privacy*
+
+Define what important actions must be traceable and how sensitive information is handled when it crosses system boundaries.
+| Audit and privacy model covering important events, data handling, and notifications.
+| R-003, R-004, R-010
+| Important citizen and administrator actions can be reconstructed from the planned audit information.
+
+Ownership, access, retention, and integrity expectations for audit data are documented.
+
+Notification rules show that sensitive details remain inside appropriately protected channels.
+
+| 4
+| *Availability, scaling, and resilience*
+
+Check whether the architecture can remain usable during high demand and when dependencies become slow or unavailable.
+| Workload and resilience model for architecture-critical workflows.
+| R-002, R-006, R-009
+| Normal and peak-load assumptions are documented.
+
+Likely bottlenecks and external capacity limits have been identified.
+
+The expected behavior under overload and dependency failure is defined for critical workflows.
+
+The architecture can explain how unrelated services remain usable when one dependency or workflow fails.
+|===
