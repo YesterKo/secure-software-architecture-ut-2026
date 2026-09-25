@@ -1,0 +1,98 @@
+= Quality Attributes
+
+== Prioritized quality attributes
+
+[cols="1,2,1,1,4",options="header"]
+|===
+|ID |Quality attribute |Priority |Architecture-critical |Requirement
+
+|QA-001
+|Security & Privacy
+|High
+|Yes
+|The system must protect sensitive personal data against unauthorized access, disclosure, and misuse.
+
+|QA-002
+|Availability
+|High
+|Yes
+|The portal must remain accessible to citizens and agencies when critical services are needed, including during peak periods or emergencies.
+
+|QA-003
+|Auditability
+|High
+|Yes
+|Every important access, change, and data exchange must be traceable so that actions can later be reconstructed and reviewed.
+
+|QA-004
+|Interoperability
+|High
+|Yes
+|The portal must integrate with multiple external systems using stable and well-defined interfaces despite differences in technology and data formats.
+
+|QA-005
+|Scalability
+|Medium
+|No
+|The system must handle significant increases in usage without unacceptable degradation.
+
+|QA-006
+|Usability
+|Medium
+|No
+|The portal must be understandable and usable by citizens with widely varying levels of digital literacy.
+
+|QA-007
+|Reliability & Fault Tolerance
+|High
+|Yes
+|The portal must handle failures of components and external systems without data loss, incorrect results, or unnecessary failure of unrelated services.
+
+|QA-008
+|Maintainability
+|High
+|No
+|The system must be able to evolve as services, agencies, regulations, and integrations change.
+
+|QA-009
+|Transparency
+|Medium
+|No
+|Citizens must be able to understand relevant uses of their data and, where appropriate, who has accessed or acted on it.
+
+|QA-010
+|Regulatory Compliance
+|High
+|No
+|The system must comply with applicable digital identity, data protection, data retention, and public-sector security requirements.
+
+|QA-011
+|Performance
+|Medium
+|No
+|Common interactive workflows such as login, service access, request submission, and document upload must respond within acceptable times.
+
+|QA-012
+|Cost Constraints
+|Medium
+|No
+|The architecture must use resources efficiently and keep operational and maintenance costs predictable.
+|===
+
+== Trade-offs
+
+=== Security and privacy vs. usability and performance
+
+Security and privacy controls can make workflows slower or less convenient. For sensitive operations, security and privacy take priority over small improvements in convenience or response time.
+
+=== Availability and reliability vs. cost
+
+Higher availability and fault tolerance usually require additional resources and redundancy. Critical services should receive stronger resilience guarantees, while less critical services may accept lower availability to keep costs reasonable.
+
+=== Auditability and transparency vs. privacy
+
+Detailed audit information improves accountability and transparency, but collecting or exposing too much information can create privacy risks. Only information necessary for accountability should be recorded or shown.
+
+=== Interoperability and maintainability vs. performance
+
+Supporting different external systems and stable interfaces can add complexity and processing overhead. Interoperability and maintainability should generally take priority over small performance gains unless a workflow has strict performance requirements.
