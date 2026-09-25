@@ -1,0 +1,81 @@
+= Quality Attribute Scenarios
+
+=== QAS-001 - External system unavailable
+
+*Linked business goals:* Provide citizens with one trusted digital entry point for government services; improve cooperation between agencies.
+
+*Relevant quality attributes:* Availability, Reliability & Fault Tolerance, Interoperability.
+
+*Stimulus:* An external registry or agency backend becomes unavailable during a citizen workflow.
+
+*Stimulus source:* External registry or agency system.
+
+*Environment:* Normal portal operation while other external systems remain available.
+
+*Artifact:* Portal workflows and integrations that depend on external systems.
+
+*Response:* The failure does not make unrelated portal services unavailable. The affected workflow reports that the required external service is unavailable without losing or duplicating already submitted information.
+
+*Response measure:* Unrelated services remain usable during the external outage. The affected workflow informs the user of the problem within `x` seconds, and no submitted request is lost or duplicated.
+
+*Questions and issues:* It is still undecided which workflows may be delayed or resumed later and which must fail immediately.
+
+=== QAS-002 - Revoked delegation
+
+*Linked business goals:* Protect citizens' rights and public trust; enable lawful representation and delegation.
+
+*Relevant quality attributes:* Security & Privacy, Auditability.
+
+*Stimulus:* A user attempts to access data or perform an action on behalf of another person or organization after their delegation has been revoked.
+
+*Stimulus source:* Authenticated portal user.
+
+*Environment:* Normal operation with the delegation already marked as invalid or revoked.
+
+*Artifact:* Authorization and delegation handling.
+
+*Response:* The requested action is denied, protected information is not disclosed, and the denied attempt is recorded for audit.
+
+*Response measure:* `x`% of requests using revoked delegations in the test set are denied, no protected data is returned, and an audit record of the attempt is created within `y` seconds.
+
+*Questions and issues:* The required propagation time for delegation changes between organizations is not yet known.
+
+=== QAS-003 - External interface changes
+
+*Linked business goals:* Improve cooperation between agencies; reduce the long-term cost and effort required to operate, maintain, and extend digital public services.
+
+*Relevant quality attributes:* Maintainability, Interoperability.
+
+*Stimulus:* An integrated agency introduces a new version of its external interface or changes its data format.
+
+*Stimulus source:* External agency.
+
+*Environment:* The portal is already integrated with multiple agencies and existing services must continue operating.
+
+*Artifact:* The affected agency integration and related portal interfaces.
+
+*Response:* The changed integration can be updated without requiring breaking changes to unrelated agency integrations or portal services.
+
+*Response measure:* Existing agency integrations continue to satisfy their current interface contracts, and no unrelated external interface requires a breaking change as a result of the update.
+
+*Questions and issues:* The amount of implementation effort considered acceptable for an integration change still needs to be defined.
+
+=== QAS-004 - Peak demand
+
+*Linked business goals:* Provide citizens with one trusted digital entry point for government services; make government services easier and more convenient to access.
+
+*Relevant quality attributes:* Scalability, Availability, Performance.
+
+*Stimulus:* Portal traffic increases to five times the expected normal load during a national deadline or event.
+
+*Stimulus source:* Large number of concurrent citizens and agency users.
+
+*Environment:* Peak operation while the main external dependencies remain available.
+
+*Artifact:* Citizen-facing portal and core request-processing workflows.
+
+*Response:* The portal continues accepting and processing requests without widespread failures or data loss.
+
+*Response measure:* At five times normal load, at least `x`% of common interactive requests complete within `y` seconds, the error rate remains below `z`%, and no successfully accepted request is lost.
+
+*Questions and issues:* Expected normal and peak traffic volumes are not yet known, so the five-times-load and response-time targets are provisional and should be validated later.
