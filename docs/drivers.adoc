@@ -6,14 +6,14 @@
 
 List 5-8 goals that explain what the Citizen Services Portal should achieve.
 
-* Provide a unified digital entry point for citizens to access government services through a single, consistent interface instead of fragmented agency-specific portals.
-* Ensure confidentiality and privacy of personal data, enforcing strict access controls, data minimization, and transparency so citizens understand how their data is used.
-* Deliver accurate, authoritative, and up‑to‑date information by integrating securely with official registries and agency back-end systems.
-* Offer a convenient, intuitive user experience that reduces friction in accessing services, submitting cases, and receiving updates.
-* Enable timely and reliable notifications (email, SMS, push, inbox) for events such as case status changes, document requests, or security alerts.
-* Improve interoperability between agencies, enabling controlled, auditable data exchange that reduces manual work and accelerates service delivery.
-* Reduce operational and maintenance costs compared to legacy systems through modern architecture, automation, and clearer separation of responsibilities.
-* Support secure digital identity and delegation, allowing citizens to act on behalf of dependents or organizations when authorized.
+* Provide citizens with one trusted digital entry point for accessing government services instead of relying on fragmented agency-specific portals.
+* Protect citizens' rights and public trust by ensuring that personal data is handled responsibly and lawfully.
+* Give citizens access to accurate, authoritative, and up-to-date information about government services and their requests.
+* Make government services easier and more convenient to access, reducing unnecessary effort and confusion for citizens.
+* Keep citizens informed about the progress of their requests and any actions they need to take.
+* Improve cooperation between agencies so that services can be delivered with less manual work, duplication, and delay.
+* Reduce the long-term cost and effort required to operate, maintain, and extend digital public services.
+* Enable lawful representation and delegation so that citizens and organizations can use services on behalf of others when authorized.
 
 == Stakeholders
 
@@ -35,22 +35,69 @@ Identify stakeholders and what each needs from the architecture.
 
 List 8-12 quality attributes or constraints.
 
-[cols="1,3,3",options="header"]
+[cols="1,3,1,1,3",options="header"]
 |===
-|ID |Driver |Why it matters
-
-|QA‑001 - Security & Privacy |The system handles sensitive personal data and must comply with national regulations (GDPR, sector‑specific laws). |Breaches or misuse of citizen data would cause legal violations, loss of public trust, and potential harm to individuals. Security is the primary architectural driver for all components.
-|QA‑002 - Availability |Citizens and agencies rely on the portal for critical services; downtime directly impacts public trust and service delivery. |Government services must remain accessible even during peak periods or emergencies. Outages disrupt essential workflows and damage credibility.
-|QA‑003 - Auditability |Every access, change, and data exchange must be traceable for compliance and oversight. |Without strong audit trails, the system cannot demonstrate lawful processing, detect misuse, or support investigations. Auditors require immutable, complete records.
-|QA‑004 - Interoperability |The portal must integrate with multiple external systems using stable, well‑defined interfaces. |Agencies use different technologies and legacy systems. Poor interoperability leads to fragile integrations, inconsistent data, and increased operational burden.
-|QA‑005 - Scalability |Usage may spike during elections, tax season, or emergencies; the system must scale without degradation. |Sudden load increases must not cause slowdowns or failures. Scalability ensures predictable performance and prevents service interruptions during national events.
-|QA‑006 - Usability |Citizens vary widely in digital literacy; poor UX leads to support burden and reduced adoption. |If the portal is confusing or frustrating, citizens will avoid it or overwhelm helpdesk teams. Usability directly affects adoption and satisfaction.
-|QA‑007 - Reliability & Fault Tolerance |External systems may fail; the portal must degrade gracefully and avoid data loss. |Many workflows depend on external registries. The portal must handle partial failures without corrupting data or blocking unrelated services.
-|QA‑008 - Maintainability |The system must evolve as new services and agencies join; architecture should minimize coupling and simplify onboarding. |Government services change frequently. High maintainability reduces long‑term costs and enables continuous improvement without major rewrites.
-|QA‑009 - Transparency |Citizens must understand how their data is accessed and by whom; transparency builds trust. |Lack of transparency leads to suspicion and complaints. Clear visibility into data usage is essential for compliance and citizen confidence.
-|QA‑010 - Regulatory Compliance |Must adhere to national digital identity standards, data retention rules, and public‑sector security baselines. |Non‑compliance results in legal penalties, forced shutdowns, and mandatory redesigns. Compliance shapes many architectural constraints.
-|QA‑011 - Performance |Core workflows (login, case submission, document upload) must respond quickly to avoid frustration. |Slow interactions reduce usability and increase abandonment rates. Performance is essential for citizen satisfaction and operational efficiency.
-|QA‑012 - Cost Constraints |Public‑sector budgets require efficient resource usage and predictable operational costs. |Architecture must avoid unnecessary complexity and expensive technologies. Cost efficiency ensures long‑term sustainability and political acceptance.
+|ID |Driver |Priority |Architecture-critical |Why it matters
+|QA-001 - Security & Privacy
+|The system must protect sensitive personal data against unauthorized access, disclosure, and misuse.
+|High
+|Yes
+|Breaches or misuse of citizen data would cause legal violations, loss of public trust, and potential harm to individuals. Security is the primary architectural driver for all components.
+|QA-002 - Availability
+|The portal must remain accessible to citizens and agencies when critical services are needed, including during peak periods or emergencies.
+|High
+|Yes
+|Government services must remain accessible even during peak periods or emergencies. Outages disrupt essential workflows and damage credibility.
+|QA-003 - Auditability
+|Every access, change, and data exchange must be traceable for compliance and oversight.
+|High
+|Yes
+|Without strong audit trails, the system cannot demonstrate lawful processing, detect misuse, or support investigations. Auditors require immutable, complete records.
+|QA-004 - Interoperability
+|The portal must integrate with multiple external systems using stable, well-defined interfaces.
+|High
+|Yes
+|Agencies use different technologies and legacy systems. Poor interoperability leads to fragile integrations, inconsistent data, and increased operational burden.
+|QA-005 - Scalability
+|The system must scale to handle usage spikes during elections, tax season, or emergencies without unacceptable degradation.
+|Medium
+|No
+|Sudden load increases must not cause slowdowns or failures. Scalability ensures predictable performance and prevents service interruptions during national events.
+|QA-006 - Usability
+|The portal must be understandable and usable by citizens with widely varying levels of digital literacy.
+|Medium
+|No
+|If the portal is confusing or frustrating, citizens will avoid it or overwhelm helpdesk teams. Usability directly affects adoption and satisfaction.
+|QA-007 - Reliability & Fault Tolerance
+|The portal must handle external-system failures gracefully and avoid data loss or failure of unrelated services.
+|High
+|Yes
+|Many workflows depend on external registries. The portal must handle partial failures without corrupting data or blocking unrelated services.
+|QA-008 - Maintainability
+|The system must be easy to evolve as new services and agencies join and requirements change.
+|High
+|No
+|Government services change frequently. High maintainability reduces long-term costs and enables continuous improvement without major rewrites.
+|QA-009 - Transparency
+|Citizens must understand how their data is accessed and by whom; transparency builds trust.
+|Medium
+|No
+|Lack of transparency leads to suspicion and complaints. Clear visibility into data usage is essential for compliance and citizen confidence.
+|QA-010 - Regulatory Compliance
+|Must adhere to national digital identity standards, data retention rules, and public-sector security baselines.
+|High
+|No
+|Non-compliance results in legal penalties, forced shutdowns, and mandatory redesigns. Compliance shapes many architectural constraints.
+|QA-011 - Performance
+|Core workflows (login, case submission, document upload) must respond quickly to avoid frustration.
+|Medium
+|No
+|Slow interactions reduce usability and increase abandonment rates. Performance is essential for citizen satisfaction and operational efficiency.
+|QA-012 - Cost Constraints
+|The system must use resources efficiently and keep operational costs predictable.
+|Medium
+|No
+|Architecture must avoid unnecessary complexity and expensive technologies. Cost efficiency ensures long-term sustainability and political acceptance.
 |===
 
 == Assumptions
@@ -82,3 +129,11 @@ List open questions as questions, not as hidden assumptions.
 * How will cross-agency authorization rules be defined and enforced?
 * Are there legacy systems that cannot support modern API standards?
 * What are the long-term expectations for onboarding new agencies or services?
+
+== Out of scope
+
+* Replacing or rebuilding existing agency backend systems and national registries.
+* Defining or changing the legal rules governing digital identity, authorization, delegation, data retention, or access to public services.
+* Implementing or operating external services such as the national identity provider, registries, email/SMS providers, or other third-party systems.
+* Redesigning the internal business processes used by individual agencies after a request has been submitted through the portal.
+* Providing non-digital service channels such as in-person, telephone, or paper-based government services.
