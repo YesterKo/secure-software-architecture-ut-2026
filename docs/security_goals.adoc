@@ -1,0 +1,124 @@
+== Security goals
+
+[cols="1,4,2,2",options="header"]
+|===
+|ID |Security goal |Asset |Threat category
+
+|SG-001
+|Only correctly authenticated users may access functionality or data that requires an identified user.
+|Citizen identity and account access
+|Spoofing / unauthorized access
+
+|SG-002
+|Users may act on behalf of another person or organization only when a valid delegation or authorization permits it.
+|Delegations, citizen and organization data
+|Unauthorized access / privilege misuse
+
+|SG-003
+|Sensitive personal data must not be disclosed to users, organizations, or external systems that are not authorized to receive it.
+|Citizen profile data, requests, documents
+|Information disclosure
+
+|SG-004
+|Requests, documents, and other important records must not be changed without authorization, and unauthorized changes must be detectable.
+|Requests/cases, documents, service data
+|Tampering
+
+|SG-005
+|Security-relevant actions must produce reliable audit records that allow important events to be traced back to the responsible user or system.
+|Audit records
+|Repudiation / tampering
+
+|SG-006
+|Data received from external agencies and registries must be accepted only through trusted and authenticated integrations.
+|Registry and service-provider data
+|Spoofing / tampering
+
+|SG-007
+|A failure or compromise of one external system must not automatically grant access to unrelated portal data or services.
+|Portal services and citizen data
+|Privilege escalation / lateral compromise
+
+|SG-008
+|Security controls must not allow excessive or malicious traffic to make critical portal services unavailable to legitimate users.
+|Citizen-facing services
+|Denial of service
+
+|SG-009
+|Notifications sent through email, SMS, or other third-party channels must not expose sensitive information unnecessarily.
+|Notification data and citizen information
+|Information disclosure
+
+|SG-010
+|Administrative and support access must be limited to the permissions required for the user's role, and sensitive administrative actions must be auditable.
+|Administrative functions, citizen data, audit data
+|Privilege misuse / insider abuse
+|===
+
+== Trust boundaries
+
+Initial trust boundaries include:
+
+* Between a citizen's browser or device and the Citizen Services Portal.
+* Between the portal and the national identity provider.
+* Between the portal and external agencies, registries, and back-end systems.
+* Between the portal and third-party notification providers such as email or SMS services.
+* Between normal citizen-facing functionality and privileged administrative or support functionality.
+* Between independently operated portal components where sensitive data or privileged requests are exchanged.
+
+== Important data categories
+
+* Citizen profile and identity data.
+* Requests, applications, and case information.
+* Uploaded and generated documents.
+* Delegation and authorization information.
+* Audit records.
+* Service-provider and registry data.
+* Notification data and contact information.
+
+== Attacker and abuse assumptions
+
+* Unauthenticated internet users may attempt to access protected functionality, guess identities, or disrupt the service.
+* Authenticated users may attempt to access information or perform actions beyond their permissions.
+* A user may attempt to continue using an expired or revoked delegation.
+* External systems or integration credentials may be misconfigured or compromised.
+* Administrators or support users may accidentally or deliberately misuse privileged access.
+* Attackers may attempt to overload public-facing services or external integrations.
+* Sensitive information may be exposed accidentally through logs, notifications, or incorrectly configured interfaces.
+
+== Mapping to risks
+
+[cols="1,3",options="header"]
+|===
+|Security goal |Related risks
+
+|SG-001
+|R-005 - Identity provider problems
+
+|SG-002
+|R-001 - Authorization and delegation rules
+
+|SG-003
+|R-004 - Unclear data ownership; R-010 - Sensitive information in notifications
+
+|SG-004
+|R-006 - Partially completed multi-system requests
+
+|SG-005
+|R-003 - Inadequate audit records
+
+|SG-006
+|R-002 - External system availability; R-007 - External interface changes; R-008 - Legacy-system integration
+
+|SG-007
+|R-002 - External system failures; R-008 - Legacy-system integration
+
+|SG-008
+|R-009 - Peak demand and overload
+
+|SG-009
+|R-010 - Sensitive information in notifications
+
+|SG-010
+|R-001 - Authorization and delegation rules; R-003 - Inadequate audit records
+|===
