@@ -10,89 +10,88 @@
 |Security & Privacy
 |High
 |Yes
-|The system must protect sensitive personal data against unauthorized access, disclosure, and misuse.
-
+|Protected health, defence-obligation, case, and document data must only be accessible to authenticated users with the required authorization. Unauthorized-access test cases must not return protected data.
 |QA-002
 |Availability
 |High
 |Yes
-|The portal must remain accessible to citizens and agencies when critical services are needed, including during peak periods or emergencies.
+|The citizen-facing portal has an initial availability target of 99.9% per month, excluding planned maintenance. Failure of KVKR, TIS, or a Defence Forces system must not make unrelated portal workflows unavailable.
 
 |QA-003
 |Auditability
 |High
 |Yes
-|Every important access, change, and data exchange must be traceable so that actions can later be reconstructed and reviewed.
+|All defined security-relevant actions must create an audit record containing the actor, action, affected resource, timestamp, and outcome within 5 seconds of the action.
 
 |QA-004
 |Interoperability
 |High
 |Yes
-|The portal must integrate with multiple external systems using stable and well-defined interfaces despite differences in technology and data formats.
+|The required exchanges with KVKR, TIS, and Defence Forces systems must pass integration/contract tests against every supported interface version.
 
 |QA-005
-|Scalability
+|Performance
 |Medium
 |No
-|The system must handle significant increases in usage without unacceptable degradation.
+|Under normal load, 95% of portal-owned interactive requests must complete within 2 seconds. Operations waiting on an unavailable external system must return an explicit unavailable or pending state within 5 seconds.
 
 |QA-006
 |Usability
 |Medium
 |No
-|The portal must be understandable and usable by citizens with widely varying levels of digital literacy.
+|At least 90% of representative test users should be able to view their case status, locate a summons or decision, and submit a requested document without help.
 
 |QA-007
 |Reliability & Fault Tolerance
 |High
 |Yes
-|The portal must handle failures of components and external systems without data loss, incorrect results, or unnecessary failure of unrelated services.
+|In defined external-system failure tests, no accepted request may be lost or processed more than once, and unrelated workflows must remain usable.
 
 |QA-008
 |Maintainability
 |High
 |No
-|The system must be able to evolve as services, agencies, regulations, and integrations change.
+|A compatible or breaking change to one external integration should require changes only to that integration and directly dependent portal functionality. Unrelated integration contracts must continue to pass their regression tests.
 
 |QA-009
 |Transparency
 |Medium
 |No
-|Citizens must be able to understand relevant uses of their data and, where appropriate, who has accessed or acted on it.
+|All audit events classified as visible to the citizen must become accessible to the affected citizen within 24 hours and identify at least the accessing organization, time, and type of action.
 
 |QA-010
 |Regulatory Compliance
 |High
 |No
-|The system must comply with applicable digital identity, data protection, data retention, and public-sector security requirements.
+|The portal must comply with applicable EU and Estonian requirements for personal and health data, digital identity, data retention, information security, and national-defence services. Relevant requirements must be identified and verified for each supported service.
 
 |QA-011
-|Performance
+|Scalability
 |Medium
 |No
-|Common interactive workflows such as login, service access, request submission, and document upload must respond within acceptable times.
+|When load increases from normal to five times normal, the system must be able to increase processing capacity while keeping peak-load response-time and error-rate targets within acceptable limits. Normal and peak workload baselines are still to be established.
 
 |QA-012
 |Cost Constraints
 |Medium
 |No
-|The architecture must use resources efficiently and keep operational and maintenance costs predictable.
+|Infrastructure usage and operational cost must be measurable per environment and attributable to the portal's major components and external integrations.
 |===
 
 == Trade-offs
 
 === Security and privacy vs. usability and performance
 
-Security and privacy controls can make workflows slower or less convenient. For sensitive operations, security and privacy take priority over small improvements in convenience or response time.
+Security and privacy take priority for access to health, defence-obligation, case, and document data, even when additional checks add latency or user steps.
 
 === Availability and reliability vs. cost
 
-Higher availability and fault tolerance usually require additional resources and redundancy. Critical services should receive stronger resilience guarantees, while less critical services may accept lower availability to keep costs reasonable.
+Critical citizen workflows require stronger failure isolation and redundancy. Additional resilience must be justified against its infrastructure and operational cost.
 
 === Auditability and transparency vs. privacy
 
-Detailed audit information improves accountability and transparency, but collecting or exposing too much information can create privacy risks. Only information necessary for accountability should be recorded or shown.
+Audit records must contain enough information to reconstruct important actions, while information exposed to citizens for transparency must not reveal protected internal or third-party information.
 
 === Interoperability and maintainability vs. performance
 
-Supporting different external systems and stable interfaces can add complexity and processing overhead. Interoperability and maintainability should generally take priority over small performance gains unless a workflow has strict performance requirements.
+Isolation between KVKR, TIS, and Defence Forces integrations may add processing overhead, but changes to one external system should not unnecessarily affect the others.

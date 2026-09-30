@@ -53,11 +53,11 @@
 |High
 |Yes
 |The three systems have different responsibilities and may use different interfaces and data models.
-|QA-005 - Scalability
-|The portal must remain usable during increased demand such as conscription call-up periods or large reserve-service notifications.
+|QA-005 - Performance
+|Common interactions such as login, case-status viewing, and document submission must remain responsive under normal and peak usage.
 |Medium
 |No
-|Short periods of high demand should not prevent citizens from accessing time-sensitive services.
+|Slow interactions make time-sensitive workflows harder to complete and worsen under peak load.
 |QA-006 - Usability
 |Citizens should be able to locate and complete the main defence-service workflows without requiring helpdesk assistance.
 |Medium
@@ -83,11 +83,11 @@
 |High
 |No
 |Violations could prevent lawful operation of the affected service.
-|QA-011 - Performance
-|Common interactions such as login, case-status viewing, and document submission must remain responsive under normal and peak usage.
+|QA-011 - Scalability
+|The portal must remain usable during increased demand such as conscription call-up periods or large reserve-service notifications.
 |Medium
 |No
-|Slow interactions make time-sensitive workflows harder to complete and worsen under peak load.
+|Short periods of high demand should not prevent citizens from accessing time-sensitive services.
 |QA-012 - Cost Constraints
 |The system must use resources efficiently and keep operational costs predictable.
 |Medium
