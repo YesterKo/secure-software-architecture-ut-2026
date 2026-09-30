@@ -1,81 +1,160 @@
-= Quality Attribute Scenarios
+== Quality Attribute Scenarios
 
-=== QAS-001 - External system unavailable
+[cols="2,3,8"]
+|===
+3+s|Scenario for QAS-001
 
-*Linked business goals:* Provide citizens with one trusted digital entry point for government services; improve cooperation between agencies.
+2+s|Scenario(s)
+|TIS unavailable during health-related workflow
 
-*Relevant quality attributes:* Availability, Reliability & Fault Tolerance, Interoperability.
+2+s|Business Goals
+|Trusted single entry point; easier conscription and health-assessment workflows
 
-*Stimulus:* An external registry or agency backend becomes unavailable during a citizen workflow.
+2+s|Relevant Quality Attributes
+|Availability; Reliability & Fault Tolerance; Interoperability
 
-*Stimulus source:* External registry or agency system.
+.6+^.^s|Scenario Components
+s|Stimulus
+|TIS becomes unavailable while a citizen is using a workflow that requires health information.
 
-*Environment:* Normal portal operation while other external systems remain available.
+s|Stimulus Source
+|Health Information System (TIS)
 
-*Artifact:* Portal workflows and integrations that depend on external systems.
+s|Environment
+|Normal portal operation; KVKR and other portal functionality remain available.
 
-*Response:* The failure does not make unrelated portal services unavailable. The affected workflow reports that the required external service is unavailable without losing or duplicating already submitted information.
+s|Artifact
+|Health-related portal workflow and TIS integration.
 
-*Response measure:* Unrelated services remain usable during the external outage. The affected workflow informs the user of the problem within `x` seconds, and no submitted request is lost or duplicated.
+s|Response
+|The affected operation returns an unavailable or pending state. Already accepted citizen data is preserved and unrelated workflows remain usable.
 
-*Questions and issues:* It is still undecided which workflows may be delayed or resumed later and which must fail immediately.
+s|Response Measure
+|The citizen receives an explicit unavailable or pending state within 5 seconds. No accepted request is lost or duplicated, and unrelated workflows remain usable.
 
-=== QAS-002 - Revoked delegation
+2+s|Questions
+|Can the affected operation continue asynchronously, or must the citizen retry it later?
 
-*Linked business goals:* Protect citizens' rights and public trust; enable lawful representation and delegation.
+2+s|Issues
+|The exact behavior depends on which health information is required and whether the workflow can proceed without an immediate TIS response.
+|===
 
-*Relevant quality attributes:* Security & Privacy, Auditability.
 
-*Stimulus:* A user attempts to access data or perform an action on behalf of another person or organization after their delegation has been revoked.
+[cols="2,3,8"]
+|===
+3+s|Scenario for QAS-002
 
-*Stimulus source:* Authenticated portal user.
+2+s|Scenario(s)
+|Unauthorized access to protected data
 
-*Environment:* Normal operation with the delegation already marked as invalid or revoked.
+2+s|Business Goals
+|Protect citizens' rights and public trust by ensuring that identity, health, and defence-related personal data are handled responsibly and lawfully.
 
-*Artifact:* Authorization and delegation handling.
+2+s|Relevant Quality Attributes
+|Security & Privacy; Auditability
 
-*Response:* The requested action is denied, protected information is not disclosed, and the denied attempt is recorded for audit.
+.6+^.^s|Scenario Components
+s|Stimulus
+|An authenticated user attempts to access health, defence-obligation, case, or document data without the required authorization.
 
-*Response measure:* `x`% of requests using revoked delegations in the test set are denied, no protected data is returned, and an audit record of the attempt is created within `y` seconds.
+s|Stimulus Source
+|Authenticated citizen or agency staff member.
 
-*Questions and issues:* The required propagation time for delegation changes between organizations is not yet known.
+s|Environment
+|Normal portal operation.
 
-=== QAS-003 - External interface changes
+s|Artifact
+|Authorization handling and protected-data access.
 
-*Linked business goals:* Improve cooperation between agencies; reduce the long-term cost and effort required to operate, maintain, and extend digital public services.
+s|Response
+|Access is denied, no protected data is returned, and the attempt is recorded for audit.
 
-*Relevant quality attributes:* Maintainability, Interoperability.
+s|Response Measure
+|All requests in the defined unauthorized-access test set are denied, no protected data is returned, and an audit record is created within 5 seconds.
 
-*Stimulus:* An integrated agency introduces a new version of its external interface or changes its data format.
+2+s|Questions
+|Which roles and service-specific rules determine access to KRA, Defence Forces, and health-related data?
 
-*Stimulus source:* External agency.
+2+s|Issues
+|Authorization may depend on information owned by external organizations, so the source and freshness of permissions must still be defined.
+|===
 
-*Environment:* The portal is already integrated with multiple agencies and existing services must continue operating.
 
-*Artifact:* The affected agency integration and related portal interfaces.
+[cols="2,3,8"]
+|===
+3+s|Scenario for QAS-003
 
-*Response:* The changed integration can be updated without requiring breaking changes to unrelated agency integrations or portal services.
+2+s|Scenario(s)
+|TIS interface changes
 
-*Response measure:* Existing agency integrations continue to satisfy their current interface contracts, and no unrelated external interface requires a breaking change as a result of the update.
+2+s|Business Goals
+|Improve cooperation between KRA, the Defence Forces, and health-information systems; reduce the long-term cost and effort required to operate, maintain, and extend the portal and its integrations.
 
-*Questions and issues:* The amount of implementation effort considered acceptable for an integration change still needs to be defined.
+2+s|Relevant Quality Attributes
+|Maintainability; Interoperability
 
-=== QAS-004 - Peak demand
+.6+^.^s|Scenario Components
+s|Stimulus
+|TIS introduces a new supported interface version or changes the structure of exchanged health data.
 
-*Linked business goals:* Provide citizens with one trusted digital entry point for government services; make government services easier and more convenient to access.
+s|Stimulus Source
+|Health Information System (TIS).
 
-*Relevant quality attributes:* Scalability, Availability, Performance.
+s|Environment
+|The portal is already integrated with KVKR, TIS, and Defence Forces systems.
 
-*Stimulus:* Portal traffic increases to five times the expected normal load during a national deadline or event.
+s|Artifact
+|TIS integration and directly dependent portal functionality.
 
-*Stimulus source:* Large number of concurrent citizens and agency users.
+s|Response
+|The TIS integration is updated without requiring changes to unrelated external integrations or portal functionality.
 
-*Environment:* Peak operation while the main external dependencies remain available.
+s|Response Measure
+|Contract tests for the updated TIS interface pass, and regression tests for the KVKR and Defence Forces integrations continue to pass without changes to their interface contracts.
 
-*Artifact:* Citizen-facing portal and core request-processing workflows.
+2+s|Questions
+|How long must older external interface versions remain supported?
 
-*Response:* The portal continues accepting and processing requests without widespread failures or data loss.
+2+s|Issues
+|The actual versioning and compatibility guarantees provided by TIS are not yet known.
+|===
 
-*Response measure:* At five times normal load, at least `x`% of common interactive requests complete within `y` seconds, the error rate remains below `z`%, and no successfully accepted request is lost.
 
-*Questions and issues:* Expected normal and peak traffic volumes are not yet known, so the five-times-load and response-time targets are provisional and should be validated later.
+[cols="2,3,8"]
+|===
+3+s|Scenario for QAS-004
+
+2+s|Scenario(s)
+|Peak demand during a call-up period
+
+2+s|Business Goals
+|Provide citizens with one trusted digital entry point for selected national-defence services; make conscription, health-assessment, and reserve-service workflows easier to access and complete.
+
+2+s|Relevant Quality Attributes
+|Performance; Scalability; Availability
+
+.6+^.^s|Scenario Components
+s|Stimulus
+|Portal traffic increases to five times the normal test load during a conscription call-up period or large reserve-service notification.
+
+s|Stimulus Source
+|A large number of citizens accessing the portal within the same period.
+
+s|Environment
+|Peak operation while KVKR, TIS, and Defence Forces systems remain available.
+
+s|Artifact
+|Citizen-facing portal and core portal-owned workflows.
+
+s|Response
+|The portal increases processing capacity and continues serving users without widespread errors or loss of accepted requests.
+
+s|Response Measure
+|At five times normal test load, at least 95% of common interactive requests complete within 3 seconds, the error rate remains below 1%, and no successfully accepted request is lost.
+
+2+s|Questions
+|What request rate and number of concurrent users represent normal and realistic peak usage?
+
+2+s|Issues
+|Normal and peak workload baselines are not yet known, so the five-times-load target must be validated once realistic traffic estimates are available.
+|===
