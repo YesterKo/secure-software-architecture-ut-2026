@@ -4,136 +4,128 @@
 
 == Mission goals
 
-List 5-8 goals that explain what the Citizen Services Portal should achieve.
+* Provide citizens with one trusted digital entry point for selected national-defence services instead of relying on separate agency-specific systems.
+* Protect citizens' rights and public trust by ensuring that identity, health, and defence-related personal data are handled responsibly and lawfully.
+* Give citizens accurate, authoritative, and up-to-date information about their defence obligations, requests, and decisions.
+* Make conscription, health-assessment, and reserve-service workflows easier to access and complete.
+* Keep citizens informed about summonses, case status changes, document requests, decisions, and actions they need to take.
+* Improve cooperation between KRA, the Defence Forces, and health-information systems to reduce manual work and delays.
+* Reduce the long-term cost and effort required to operate, maintain, and extend the portal and its integrations.
+* Apply service-specific authorization and delegation rules so that actions can only be performed by the citizen or an authorized representative where delegation is permitted.
 
-* Provide citizens with one trusted digital entry point for accessing government services instead of relying on fragmented agency-specific portals.
-* Protect citizens' rights and public trust by ensuring that personal data is handled responsibly and lawfully.
-* Give citizens access to accurate, authoritative, and up-to-date information about government services and their requests.
-* Make government services easier and more convenient to access, reducing unnecessary effort and confusion for citizens.
-* Keep citizens informed about the progress of their requests and any actions they need to take.
-* Improve cooperation between agencies so that services can be delivered with less manual work, duplication, and delay.
-* Reduce the long-term cost and effort required to operate, maintain, and extend digital public services.
-* Enable lawful representation and delegation so that citizens and organizations can use services on behalf of others when authorized.
 
 == Stakeholders
-
-Identify stakeholders and what each needs from the architecture.
 
 [cols="1,3",options="header"]
 |===
 |Stakeholder |Need or concern
 
-|Residents/citizens |Access services easily; trust that their data is protected; understand how their data is used; receive timely notifications; complete workflows without technical issues.
-|Service provider organizations/agencies |Reliable, secure access to citizen data; clear API contracts; predictable integration patterns; auditability; minimal operational overhead.
+|Residents/citizens |Access defence-related services easily; understand their obligations, requests, and decisions; trust that sensitive data is protected; receive timely notifications.
+|Service provider organizations/agencies |KRA and the Defence Forces need reliable integrations, clear responsibility boundaries, secure access to required data, and traceable actions.
 |Administrators/helpdesk |Tools for troubleshooting user issues; visibility into system health; ability to inspect audit logs; safe ways to assist users without violating privacy.
 |Auditors/oversight |Complete, immutable audit trails; transparency features; evidence of compliance with regulations; ability to trace data flows and decisions.
-|External registries/back-end systems |Predictable integration load; secure and authenticated access; clear failure-handling expectations; minimal disruption to existing systems.
+|External registries/backend systems |KVKR, TIS, and Defence Forces systems need authenticated access, controlled request and retry rates, clear interface contracts, and defined failure handling.
 |Operations/security teams |Observability, monitoring, and alerting; secure deployment model; incident response workflows; clear trust boundaries; ability to enforce policies and detect anomalies.
 |===
 
 == Quality attributes and constraints
 
-List 8-12 quality attributes or constraints.
-
 [cols="1,3,1,1,3",options="header"]
 |===
 |ID |Driver |Priority |Architecture-critical |Why it matters
 |QA-001 - Security & Privacy
-|The system must protect sensitive personal data against unauthorized access, disclosure, and misuse.
+|Access to health data, defence-obligation data, case information, and documents must require authenticated and authorized access.
 |High
 |Yes
-|Breaches or misuse of citizen data would cause legal violations, loss of public trust, and potential harm to individuals. Security is the primary architectural driver for all components.
+|The portal handles sensitive health and defence-related personal data. Unauthorized disclosure could harm citizens and violate legal obligations.
 |QA-002 - Availability
-|The portal must remain accessible to citizens and agencies when critical services are needed, including during peak periods or emergencies.
+|Failure of KVKR, TIS, or a Defence Forces backend must not make unrelated portal services unavailable.
 |High
 |Yes
-|Government services must remain accessible even during peak periods or emergencies. Outages disrupt essential workflows and damage credibility.
+|External systems are independently operated and may become unavailable.
 |QA-003 - Auditability
-|Every access, change, and data exchange must be traceable for compliance and oversight.
+|Access to protected data, case-state changes, staff decisions, and document operations must be traceable to the responsible user or system.
 |High
 |Yes
-|Without strong audit trails, the system cannot demonstrate lawful processing, detect misuse, or support investigations. Auditors require immutable, complete records.
+|Security incidents, disputes, and administrative decisions must be reconstructable afterwards.
 |QA-004 - Interoperability
-|The portal must integrate with multiple external systems using stable, well-defined interfaces.
+|The portal must exchange the required data with KVKR, Defence Forces systems, and TIS through documented interfaces.
 |High
 |Yes
-|Agencies use different technologies and legacy systems. Poor interoperability leads to fragile integrations, inconsistent data, and increased operational burden.
+|The three systems have different responsibilities and may use different interfaces and data models.
 |QA-005 - Scalability
-|The system must scale to handle usage spikes during elections, tax season, or emergencies without unacceptable degradation.
+|The portal must remain usable during increased demand such as conscription call-up periods or large reserve-service notifications.
 |Medium
 |No
-|Sudden load increases must not cause slowdowns or failures. Scalability ensures predictable performance and prevents service interruptions during national events.
+|Short periods of high demand should not prevent citizens from accessing time-sensitive services.
 |QA-006 - Usability
-|The portal must be understandable and usable by citizens with widely varying levels of digital literacy.
+|Citizens should be able to locate and complete the main defence-service workflows without requiring helpdesk assistance.
 |Medium
 |No
-|If the portal is confusing or frustrating, citizens will avoid it or overwhelm helpdesk teams. Usability directly affects adoption and satisfaction.
+|The services may involve deadlines, documents, and unfamiliar administrative processes.
 |QA-007 - Reliability & Fault Tolerance
-|The portal must handle external-system failures gracefully and avoid data loss or failure of unrelated services.
+|Failure during a workflow involving an external system must not lose or duplicate already accepted citizen data or break unrelated workflows.
 |High
 |Yes
-|Many workflows depend on external registries. The portal must handle partial failures without corrupting data or blocking unrelated services.
+|Conscription and health-assessment workflows depend on several independently operated systems.
 |QA-008 - Maintainability
-|The system must be easy to evolve as new services and agencies join and requirements change.
+|Changes to one external integration should not require changes to unrelated integrations or portal services.
 |High
 |No
-|Government services change frequently. High maintainability reduces long-term costs and enables continuous improvement without major rewrites.
+|KVKR, Defence Forces systems, and TIS can evolve independently.
 |QA-009 - Transparency
-|Citizens must understand how their data is accessed and by whom; transparency builds trust.
+|Citizens should be able to see how their data has been accessed or used where disclosure is legally permitted.
 |Medium
 |No
-|Lack of transparency leads to suspicion and complaints. Clear visibility into data usage is essential for compliance and citizen confidence.
+|Health and defence-related information is sensitive and its use should be understandable to the affected citizen.
 |QA-010 - Regulatory Compliance
-|Must adhere to national digital identity standards, data retention rules, and public-sector security baselines.
+|The portal must comply with applicable requirements for digital identity, personal and health data, retention, and public-sector security.
 |High
 |No
-|Non-compliance results in legal penalties, forced shutdowns, and mandatory redesigns. Compliance shapes many architectural constraints.
+|Violations could prevent lawful operation of the affected service.
 |QA-011 - Performance
-|Core workflows (login, case submission, document upload) must respond quickly to avoid frustration.
+|Common interactions such as login, case-status viewing, and document submission must remain responsive under normal and peak usage.
 |Medium
 |No
-|Slow interactions reduce usability and increase abandonment rates. Performance is essential for citizen satisfaction and operational efficiency.
+|Slow interactions make time-sensitive workflows harder to complete and worsen under peak load.
 |QA-012 - Cost Constraints
 |The system must use resources efficiently and keep operational costs predictable.
 |Medium
 |No
-|Architecture must avoid unnecessary complexity and expensive technologies. Cost efficiency ensures long-term sustainability and political acceptance.
+|The portal is expected to operate and evolve over a long period with public-sector budget constraints.
 |===
 
 == Assumptions
 
-List assumptions that may later need validation.
-
 * National digital identity (eID / OIDC provider) will remain stable and available with high uptime.
-* External registries provide reliable APIs with documented schemas.
-* Agencies agree on standardized data exchange formats.
+* Required machine-to-machine interfaces to KVKR, Defence Forces systems, and TIS will be available and documented.
+* KVKR, Defence Forces systems, and TIS remain the authoritative sources for the data they own.
 * Citizens primarily access the portal via modern browsers and mobile devices.
 * Document upload sizes and formats follow existing government guidelines.
 * Notification channels (SMS, email) are provided by trusted third-party services with SLAs (Service Level Agreements)
-* The portal will not replace agency-specific back-end systems, only integrate with them.
-* Delegation rules (acting on behalf of dependents/organizations) follow existing legal frameworks.
+* The portal will not replace KVKR, TIS, or Defence Forces backend systems. It integrates with them and does not become the authoritative source for their domain data.
+* Delegation rules are service-specific and may restrict or prohibit delegation for national-defence services.
 * The system will operate in a government-managed cloud or data center environment.
 * All participating agencies accept the portal’s audit and logging requirements.
 
 == Open questions
 
-List open questions as questions, not as hidden assumptions.
-
-* What is the exact system boundary: does the portal store citizen data or only proxy it?
-* Which agency is responsible for identity lifecycle events (revocation, delegation changes)?
-* How will document retention policies differ across agencies?
-* What level of transparency is legally required for audit log visibility to citizens?
-* How will the portal behave when an external registry is unavailable: queue requests, show partial data, or block workflows?
+* Which data must the portal store itself, beyond portal-owned data such as preferences, notifications, audit records, and temporary workflow state?
+* Which national-defence operations, if any, may be delegated to another citizen?
+* How will document retention requirements differ between KRA, the Defence Forces, and health-related workflows?
+* What level of audit information may be shown to citizens?
+* How should the portal behave when KVKR, TIS, or a Defence Forces system is unavailable: queue work, show partial information, or stop the affected workflow?
 * Which workflows must be synchronous (real-time) versus asynchronous (event-driven)?
-* What is the expected peak load during national events (elections, tax deadlines)?
-* How will cross-agency authorization rules be defined and enforced?
-* Are there legacy systems that cannot support modern API standards?
+* What is the expected peak load during conscription call-up periods, reserve exercises, or other high-demand events?
+* How will authorization rules for KRA and Defence Forces staff be represented and enforced?
+* Do all three external systems provide interfaces suitable for the required workflows, or will integration-specific adaptation be necessary?
 * What are the long-term expectations for onboarding new agencies or services?
 
 == Out of scope
 
-* Replacing or rebuilding existing agency backend systems and national registries.
-* Defining or changing the legal rules governing digital identity, authorization, delegation, data retention, or access to public services.
-* Implementing or operating external services such as the national identity provider, registries, email/SMS providers, or other third-party systems.
-* Redesigning the internal business processes used by individual agencies after a request has been submitted through the portal.
+* Public services unrelated to the selected national-defence service domain.
+* Replacing or rebuilding KVKR, TIS, or Defence Forces backend systems.
+* Defining or changing legal rules governing military obligations, health assessment, identity, authorization, delegation, or data retention.
+* Implementing or operating external systems such as the national identity provider, TIS, notification providers, or agency backend systems.
+* Redesigning the internal processes used by KRA, the Defence Forces, or healthcare organizations after responsibility for a request has passed to them.
 * Providing non-digital service channels such as in-person, telephone, or paper-based government services.
