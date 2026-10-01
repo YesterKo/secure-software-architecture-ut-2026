@@ -1,0 +1,32 @@
+= Ownership Sketch
+
+The following are initial ownership assumptions. They do not define the final container structure.
+
+[cols="3,4,3",options="header"]
+|===
+|Container/service |Responsibility |Ownership assumption
+
+|Citizen-facing portal
+|User interface, service catalogue, profile, case/status presentation, document interaction.
+|Citizen Services Portal team.
+
+|Case/workflow handling
+|Coordinates portal-side request state and workflows involving external systems.
+|Citizen Services Portal team.
+
+|Identity and access
+|TARA integration, portal sessions, authorization, roles, and permitted delegation.
+|Portal/security team. TARA itself remains externally owned by RIA.
+
+|External-system integrations
+|Communication with KVKR, TIS, and Defence Forces systems; isolates external interface differences from the rest of the portal.
+|Portal integration team. External systems remain owned by their respective organizations.
+
+|Audit and transparency
+|Records security-relevant actions and provides the information that may be exposed to citizens or auditors.
+|Portal/security team.
+
+|Notifications
+|Creates and sends portal notifications through supported channels.
+|Portal/platform team. Email/SMS delivery infrastructure remains externally owned.
+|===
