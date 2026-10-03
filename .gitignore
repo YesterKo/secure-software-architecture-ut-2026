@@ -1,0 +1,5 @@
+# Structurizr local runtime files
+diagrams/.structurizr/
+
+# macOS
+.DS_Store
