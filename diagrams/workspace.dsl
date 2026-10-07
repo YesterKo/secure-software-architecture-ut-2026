@@ -3,16 +3,16 @@ workspace "Citizen Services Portal" "C4 architecture model for the Citizen Servi
     !identifiers hierarchical
 
     model {
-        citizen = person "Citizen / Resident" "Uses selected national-defence-related citizen services."
+        citizen = person "Citizen / Resident" "Uses digital citizen services through a unified portal."
 
         administrator = person "Administrator / Helpdesk Staff" "Provides permitted support and performs authorized administrative tasks."
 
         auditor = person "Auditor / Oversight" "Reviews permitted audit and transparency information."
 
-        portal = softwareSystem "Citizen Services Portal" "Provides a unified digital entry point for selected national-defence-related citizen services." {
+        portal = softwareSystem "Citizen Services Portal" "Provides a unified digital entry point for interacting with digital services and registries." {
             app = container "Portal Application" "Provides the web interface and portal-side application logic, including access control, service workflows, document handling, notifications, auditing, and external-system integration."
 
-            db = container "Portal Database" "Stores portal-owned data such as preferences, workflow coordination state, notification metadata, and portal audit records. It is not authoritative for KVKR, TIS, or Defence Forces domain data." {
+            db = container "Portal Database" "Stores portal-owned data such as preferences, workflow coordination state, notification metadata, and portal audit records. It is not authoritative for KVKR, TIS, or Estonian Defence Forces domain data." {
                 tags "Database"
             }
         }
@@ -21,19 +21,19 @@ workspace "Citizen Services Portal" "C4 architecture model for the Citizen Servi
 
         kvkr = softwareSystem "Kaitseväekohustuslaste register (KVKR)" "Authoritative defence-obligation register operated by Kaitseressursside Amet (KRA)."
 
-        defenceForces = softwareSystem "Defence Forces Systems" "Authoritative Estonian Defence Forces systems providing data and functionality required by the selected services."
+        defenceForces = softwareSystem "Estonian Defence Forces Systems" "Authoritative Defence Forces systems providing data and functionality required by the selected services."
 
         tis = softwareSystem "Health Information System (TIS)" "Authoritative health information system accessed through TEHIK-managed interfaces and X-tee."
 
         notificationProviders = softwareSystem "Email/SMS Notification Providers" "Trusted external services used to deliver portal notifications."
 
-        citizen -> portal.app "Uses to access defence-related services"
+        citizen -> portal.app "Uses to access citizen services"
         administrator -> portal.app "Uses for permitted support and administration"
         auditor -> portal.app "Uses to review permitted audit and transparency information"
 
         portal.app -> portal.db "Reads from and writes portal-owned data"
 
-        portal.app -> tara "Authenticates users via" "OIDC"
+        portal.app -> tara "Uses for user authentication" "OIDC"
         portal.app -> kvkr "Reads and exchanges required defence-obligation data"
         portal.app -> defenceForces "Exchanges required defence-service workflow data"
         portal.app -> tis "Requests required health information through trusted interfaces"
