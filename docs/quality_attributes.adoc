@@ -15,7 +15,7 @@
 |Availability
 |High
 |Yes
-|The citizen-facing portal has an initial availability target of 99.9% per month, excluding planned maintenance. Failure of KVKR, TIS, or a Defence Forces system must not make unrelated portal workflows unavailable.
+|The citizen-facing portal has an initial availability target of 99.9% per month, excluding planned maintenance. Failure of KVKR, TIS, or a Estonian Defence Forces system must not make unrelated portal workflows unavailable.
 
 |QA-003
 |Auditability
@@ -27,7 +27,7 @@
 |Interoperability
 |High
 |Yes
-|The required exchanges with KVKR, TIS, and Defence Forces systems must pass integration/contract tests against every supported interface version.
+|The required exchanges with KVKR, TIS, and Estonian Defence Forces systems must pass integration/contract tests against every supported interface version.
 
 |QA-005
 |Performance
@@ -94,4 +94,4 @@ Audit records must contain enough information to reconstruct important actions, 
 
 === Interoperability and maintainability vs. performance
 
-Isolation between KVKR, TIS, and Defence Forces integrations may add processing overhead, but changes to one external system should not unnecessarily affect the others.
+Isolation between KVKR, TIS, and Estonian Defence Forces integrations may add processing overhead, but changes to one external system should not unnecessarily affect the others.

@@ -9,7 +9,7 @@
 * Give citizens accurate, authoritative, and up-to-date information about their defence obligations, requests, and decisions.
 * Make conscription, health-assessment, and reserve-service workflows easier to access and complete.
 * Keep citizens informed about summonses, case status changes, document requests, decisions, and actions they need to take.
-* Improve cooperation between KRA, the Defence Forces, and health-information systems to reduce manual work and delays.
+* Improve cooperation between KRA, the Estonian Defence Forces, and health-information systems to reduce manual work and delays.
 * Reduce the long-term cost and effort required to operate, maintain, and extend the portal and its integrations.
 * Apply service-specific authorization and delegation rules so that actions can only be performed by the citizen or an authorized representative where delegation is permitted.
 
@@ -21,10 +21,10 @@
 |Stakeholder |Need or concern
 
 |Residents/citizens |Access defence-related services easily; understand their obligations, requests, and decisions; trust that sensitive data is protected; receive timely notifications.
-|Service provider organizations/agencies |KRA and the Defence Forces need reliable integrations, clear responsibility boundaries, secure access to required data, and traceable actions.
+|Service provider organizations/agencies |KRA and the Estonian Defence Forces need reliable integrations, clear responsibility boundaries, secure access to required data, and traceable actions.
 |Administrators/helpdesk |Tools for troubleshooting user issues; visibility into system health; ability to inspect audit logs; safe ways to assist users without violating privacy.
 |Auditors/oversight |Complete, immutable audit trails; transparency features; evidence of compliance with regulations; ability to trace data flows and decisions.
-|External registries/backend systems |KVKR, TIS, and Defence Forces systems need authenticated access, controlled request and retry rates, clear interface contracts, and defined failure handling.
+|External registries/backend systems |KVKR, TIS, and Estonian Defence Forces systems need authenticated access, controlled request and retry rates, clear interface contracts, and defined failure handling.
 |Operations/security teams |Observability, monitoring, and alerting; secure deployment model; incident response workflows; clear trust boundaries; ability to enforce policies and detect anomalies.
 |===
 
@@ -39,7 +39,7 @@
 |Yes
 |The portal handles sensitive health and defence-related personal data. Unauthorized disclosure could harm citizens and violate legal obligations.
 |QA-002 - Availability
-|Failure of KVKR, TIS, or a Defence Forces backend must not make unrelated portal services unavailable.
+|Failure of KVKR, TIS, or a Estonian Defence Forces backend must not make unrelated portal services unavailable.
 |High
 |Yes
 |External systems are independently operated and may become unavailable.
@@ -49,7 +49,7 @@
 |Yes
 |Security incidents, disputes, and administrative decisions must be reconstructable afterwards.
 |QA-004 - Interoperability
-|The portal must exchange the required data with KVKR, Defence Forces systems, and TIS through documented interfaces.
+|The portal must exchange the required data with KVKR, Estonian Defence Forces systems, and TIS through documented interfaces.
 |High
 |Yes
 |The three systems have different responsibilities and may use different interfaces and data models.
@@ -72,7 +72,7 @@
 |Changes to one external integration should not require changes to unrelated integrations or portal services.
 |High
 |No
-|KVKR, Defence Forces systems, and TIS can evolve independently.
+|KVKR, Estonian Defence Forces systems, and TIS can evolve independently.
 |QA-009 - Transparency
 |Citizens should be able to see how their data has been accessed or used where disclosure is legally permitted.
 |Medium
@@ -98,12 +98,12 @@
 == Assumptions
 
 * National digital identity (eID / OIDC provider) will remain stable and available with high uptime.
-* Required machine-to-machine interfaces to KVKR, Defence Forces systems, and TIS will be available and documented.
-* KVKR, Defence Forces systems, and TIS remain the authoritative sources for the data they own.
+* Required machine-to-machine interfaces to KVKR, Estonian Defence Forces systems, and TIS will be available and documented.
+* KVKR, Estonian Defence Forces systems, and TIS remain the authoritative sources for the data they own.
 * Citizens primarily access the portal via modern browsers and mobile devices.
 * Document upload sizes and formats follow existing government guidelines.
 * Notification channels (SMS, email) are provided by trusted third-party services with SLAs (Service Level Agreements)
-* The portal will not replace KVKR, TIS, or Defence Forces backend systems. It integrates with them and does not become the authoritative source for their domain data.
+* The portal will not replace KVKR, TIS, or Estonian Defence Forces backend systems. It integrates with them and does not become the authoritative source for their domain data.
 * Delegation rules are service-specific and may restrict or prohibit delegation for national-defence services.
 * The system will operate in a government-managed cloud or data center environment.
 * All participating agencies accept the portal’s audit and logging requirements.
@@ -112,20 +112,20 @@
 
 * Which data must the portal store itself, beyond portal-owned data such as preferences, notifications, audit records, and temporary workflow state?
 * Which national-defence operations, if any, may be delegated to another citizen?
-* How will document retention requirements differ between KRA, the Defence Forces, and health-related workflows?
+* How will document retention requirements differ between KRA, the Estonian Defence Forces, and health-related workflows?
 * What level of audit information may be shown to citizens?
-* How should the portal behave when KVKR, TIS, or a Defence Forces system is unavailable: queue work, show partial information, or stop the affected workflow?
+* How should the portal behave when KVKR, TIS, or a Estonian Defence Forces system is unavailable: queue work, show partial information, or stop the affected workflow?
 * Which workflows must be synchronous (real-time) versus asynchronous (event-driven)?
 * What is the expected peak load during conscription call-up periods, reserve exercises, or other high-demand events?
-* How will authorization rules for KRA and Defence Forces staff be represented and enforced?
+* How will authorization rules for KRA and Estonian Defence Forces staff be represented and enforced?
 * Do all three external systems provide interfaces suitable for the required workflows, or will integration-specific adaptation be necessary?
 * What are the long-term expectations for onboarding new agencies or services?
 
 == Out of scope
 
 * Public services unrelated to the selected national-defence service domain.
-* Replacing or rebuilding KVKR, TIS, or Defence Forces backend systems.
+* Replacing or rebuilding KVKR, TIS, or Estonian Defence Forces backend systems.
 * Defining or changing legal rules governing military obligations, health assessment, identity, authorization, delegation, or data retention.
 * Implementing or operating external systems such as the national identity provider, TIS, notification providers, or agency backend systems.
-* Redesigning the internal processes used by KRA, the Defence Forces, or healthcare organizations after responsibility for a request has passed to them.
+* Redesigning the internal processes used by KRA, the Estonian Defence Forces, or healthcare organizations after responsibility for a request has passed to them.
 * Providing non-digital service channels such as in-person, telephone, or paper-based government services.

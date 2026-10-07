@@ -73,7 +73,7 @@ s|Response Measure
 |All requests in the defined unauthorized-access test set are denied, no protected data is returned, and an audit record is created within 5 seconds.
 
 2+s|Questions
-|Which roles and service-specific rules determine access to KRA, Defence Forces, and health-related data?
+|Which roles and service-specific rules determine access to KRA, Estonian Defence Forces, and health-related data?
 
 2+s|Issues
 |Authorization may depend on information owned by external organizations, so the source and freshness of permissions must still be defined.
@@ -88,7 +88,7 @@ s|Response Measure
 |TIS interface changes
 
 2+s|Business Goals
-|Improve cooperation between KRA, the Defence Forces, and health-information systems; reduce the long-term cost and effort required to operate, maintain, and extend the portal and its integrations.
+|Improve cooperation between KRA, the Estonian Defence Forces, and health-information systems; reduce the long-term cost and effort required to operate, maintain, and extend the portal and its integrations.
 
 2+s|Relevant Quality Attributes
 |Maintainability; Interoperability
@@ -101,7 +101,7 @@ s|Stimulus Source
 |Health Information System (TIS).
 
 s|Environment
-|The portal is already integrated with KVKR, TIS, and Defence Forces systems.
+|The portal is already integrated with KVKR, TIS, and Estonian Defence Forces systems.
 
 s|Artifact
 |TIS integration and directly dependent portal functionality.
@@ -110,7 +110,7 @@ s|Response
 |The TIS integration is updated without requiring changes to unrelated external integrations or portal functionality.
 
 s|Response Measure
-|Contract tests for the updated TIS interface pass, and regression tests for the KVKR and Defence Forces integrations continue to pass without changes to their interface contracts.
+|Contract tests for the updated TIS interface pass, and regression tests for the KVKR and Estonian Defence Forces integrations continue to pass without changes to their interface contracts.
 
 2+s|Questions
 |How long must older external interface versions remain supported?
@@ -141,7 +141,7 @@ s|Stimulus Source
 |A large number of citizens accessing the portal within the same period.
 
 s|Environment
-|Peak operation while KVKR, TIS, and Defence Forces systems remain available.
+|Peak operation while KVKR, TIS, and Estonian Defence Forces systems remain available.
 
 s|Artifact
 |Citizen-facing portal and core portal-owned workflows.

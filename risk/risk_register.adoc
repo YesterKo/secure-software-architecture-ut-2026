@@ -5,7 +5,7 @@
 |===
 |ID |Risk |Likelihood |Impact |Mitigation / treatment
 |R-001
-|If authorization rules for citizens, KRA staff, Defence Forces staff, or delegated access are more complex than expected, then the chosen access-control model may not support the required workflows safely.
+|If authorization rules for citizens, KRA staff, Estonian Defence Forces staff, or delegated access are more complex than expected, then the chosen access-control model may not support the required workflows safely.
 |High
 |High
 |Create a role/permission matrix for representative workflows and implement an authorization PoC. Test allowed and denied cases, including revoked or prohibited delegated access.
@@ -17,13 +17,13 @@
 |Validate the TIS integration early with a connectivity/API PoC using available documentation, sandbox access, or representative mocks. Record unsupported assumptions and adjust the integration boundary before detailed implementation.
 
 |R-003
-|If KVKR or Defence Forces systems do not provide suitable machine-to-machine interfaces for the required workflows, then the planned portal functionality may be impossible or significantly more complex to implement.
+|If KVKR or Estonian Defence Forces systems do not provide suitable machine-to-machine interfaces for the required workflows, then the planned portal functionality may be impossible or significantly more complex to implement.
 |High
 |High
 |Verify the required operations and data exchanges against available interfaces. Build a small PoC integration for one representative workflow and identify where adapters, asynchronous processing, or scope changes are needed.
 
 |R-004
-|If the portal stores data that should remain authoritative in KVKR, TIS, or Defence Forces systems, then duplicated or stale sensitive data may force later redesign and create privacy risks.
+|If the portal stores data that should remain authoritative in KVKR, TIS, or Estonian Defence Forces systems, then duplicated or stale sensitive data may force later redesign and create privacy risks.
 |High
 |High
 |Define the data owner for each major data category and prototype one representative workflow using the proposed ownership boundary. Review which data is stored, cached temporarily, or fetched on demand.
@@ -41,7 +41,7 @@
 |Implement a representative multi-system workflow and inject failures at different steps. Test retries and duplicate submissions, then adjust the workflow until accepted requests are not lost or processed twice.
 
 |R-007
-|If TIS, KVKR, or Defence Forces interfaces change during development or later maintenance, then an integration may break or force unrelated portal changes.
+|If TIS, KVKR, or Estonian Defence Forces interfaces change during development or later maintenance, then an integration may break or force unrelated portal changes.
 |High
 |Medium
 |Add contract and regression tests for each external interface. Simulate a compatible and a breaking interface change and verify that changes remain isolated to the affected integration.

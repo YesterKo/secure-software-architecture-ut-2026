@@ -10,10 +10,10 @@
 
 | 1
 |*Validate external integrations and data ownership*
-|TIS integration PoC; KVKR/Defence Forces integration PoC; initial data-ownership map.
+|TIS integration PoC; KVKR/Estonian Defence Forces integration PoC; initial data-ownership map.
 |R-002, R-003, R-004, R-010
 a|* Required operations can be exercised through documented interfaces, test environments, or representative mocks.
-* One representative workflow identifies which data remains authoritative in KVKR, TIS, or Defence Forces systems and what the portal must store temporarily.
+* One representative workflow identifies which data remains authoritative in KVKR, TIS, or Estonian Defence Forces systems and what the portal must store temporarily.
 * Missing or unsuitable interfaces are discovered before detailed architecture work.
 
 |2

@@ -19,7 +19,7 @@ The following are initial ownership assumptions. They do not define the final co
 |Portal/security team. TARA itself remains externally owned by RIA.
 
 |External-system integrations
-|Communication with KVKR, TIS, and Defence Forces systems; isolates external interface differences from the rest of the portal.
+|Communication with KVKR, TIS, and Estonian Defence Forces systems; isolates external interface differences from the rest of the portal.
 |Portal integration team. External systems remain owned by their respective organizations.
 
 |Audit and transparency

@@ -30,7 +30,7 @@
 |Repudiation / tampering
 
 |SG-006
-|Data exchanged with KVKR, TIS, and Defence Forces systems must only use trusted and authenticated interfaces/connections.
+|Data exchanged with KVKR, TIS, and Estonian Defence Forces systems must only use trusted and authenticated interfaces/connections.
 |External-system data and interfaces
 |Spoofing / tampering
 
@@ -61,7 +61,7 @@
 * Citizen Services Portal ↔ TARA
 * Citizen Services Portal ↔ KVKR
 * Citizen Services Portal ↔ TIS
-* Citizen Services Portal ↔ Defence Forces systems
+* Citizen Services Portal ↔ Estonian Defence Forces systems
 * Citizen Services Portal ↔ email/SMS notification providers
 * Citizen-facing functionality ↔ privileged staff/administrative functionality
 
@@ -108,10 +108,10 @@
 |R-008 - Late audit and privacy requirements
 
 |SG-006
-|R-002 - TIS integration assumptions; R-003 - KVKR/Defence Forces interface assumptions; R-007 - External interface changes
+|R-002 - TIS integration assumptions; R-003 - KVKR/Estonian Defence Forces interface assumptions; R-007 - External interface changes
 
 |SG-007
-|R-002 - TIS integration assumptions; R-003 - KVKR/Defence Forces interface assumptions
+|R-002 - TIS integration assumptions; R-003 - KVKR/Estonian Defence Forces interface assumptions
 
 |SG-008
 |R-009 - Incorrect workload assumptions
