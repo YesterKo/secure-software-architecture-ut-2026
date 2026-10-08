@@ -10,34 +10,59 @@ workspace "Citizen Services Portal" "C4 architecture model for the Citizen Servi
         auditor = person "Auditor / Oversight" "Reviews permitted audit and transparency information."
 
         portal = softwareSystem "Citizen Services Portal" "Provides a unified digital entry point for interacting with digital services and registries." {
-            app = container "Portal Application" "Provides the web interface and portal-side application logic, including access control, service workflows, document handling, notifications, auditing, and external-system integration."
+            web = container "Web Application" "Provides the user-facing interface for citizens, support staff, and auditors." {
+                tags "Web"
+            }
 
-            db = container "Portal Database" "Stores portal-owned data such as preferences, workflow coordination state, notification metadata, and portal audit records. It is not authoritative for KVKR, TIS, or Estonian Defence Forces domain data." {
+            backend = container "Backend Application" "Provides portal business logic, authorization, workflow coordination, validation, document operations, notification initiation, and the API used by the Web Application."
+
+            integration = container "Integration Service" "Isolates external-system integrations and handles system-specific communication, data mapping, and integration failures." 
+
+            db = container "Portal Database" "Stores portal-owned application data such as preferences, workflow coordination state, notification metadata, and configuration." {
                 tags "Database"
             }
+
+            documents = container "Document Store" "Stores documents retained or temporarily processed by the portal." {
+                tags "Store"
+            }
+
+            audit = container "Audit Store" "Stores security-relevant portal audit events with restricted access and integrity requirements." {
+                tags "Store"
+            }
+            
         }
+
+
+
 
         tara = softwareSystem "State Authentication Service (TARA)" "External identity provider operated by RIA and used for strong authentication with supported Estonian eID methods."
 
         kvkr = softwareSystem "Kaitseväekohustuslaste register (KVKR)" "Authoritative defence-obligation register operated by Kaitseressursside Amet (KRA)."
 
-        defenceForces = softwareSystem "Estonian Defence Forces Systems" "Authoritative Defence Forces systems providing data and functionality required by the selected services."
+        defenceForces = softwareSystem "Estonian Defence Forces Systems" "Authoritative Defence Forces systems providing data and functionality to portal services."
 
-        tis = softwareSystem "Health Information System (TIS)" "Authoritative health information system accessed through TEHIK-managed interfaces and X-tee."
+        tis = softwareSystem "Health Information System (TIS)" "Authoritative health information system accessed through TEHIK-managed interfaces."
 
         notificationProviders = softwareSystem "Email/SMS Notification Providers" "Trusted external services used to deliver portal notifications."
 
-        citizen -> portal.app "Uses to access citizen services"
-        administrator -> portal.app "Uses for permitted support and administration"
-        auditor -> portal.app "Uses to review permitted audit and transparency information"
+        citizen -> portal.web "Uses to access citizen services"
+        administrator -> portal.web "Uses for permitted support and administration"
+        auditor -> portal.web "Uses to review permitted audit and transparency information"
 
-        portal.app -> portal.db "Reads from and writes portal-owned data"
+        portal.web -> portal.backend "Requests portal data and operations from"
 
-        portal.app -> tara "Uses for user authentication" "OIDC"
-        portal.app -> kvkr "Reads and exchanges required defence-obligation data"
-        portal.app -> defenceForces "Exchanges required defence-service workflow data"
-        portal.app -> tis "Requests required health information through trusted interfaces"
-        portal.app -> notificationProviders "Sends notification requests"
+        portal.backend -> tara "Uses for user authentication" "OIDC"
+
+        portal.backend -> portal.db "Reads from and writes portal-owned app data"
+        portal.backend -> portal.documents "Stores and retrieves documents"
+        portal.backend -> portal.audit "Writes audit events and reads permitted audit information"
+        portal.backend -> notificationProviders "Sends notification requests"
+
+        portal.backend -> portal.integration "Requests external data and operations via"
+
+        portal.integration -> kvkr "Exchanges required defence-obligation data"
+        portal.integration -> defenceForces "Exchanges required defence-service workflow data"
+        portal.integration -> tis "Requests required health information" "X-tee"
     }
 
     views {
@@ -65,6 +90,12 @@ workspace "Citizen Services Portal" "C4 architecture model for the Citizen Servi
             element "Boundary" {
                 strokeWidth 5
             }
+            element "Web" {
+                shape webbrowser
+            }  
+            element "Store" {
+                shape cylinder
+            }   
             relationship "Relationship" {
                 thickness 4
             }
