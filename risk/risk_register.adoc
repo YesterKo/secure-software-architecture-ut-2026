@@ -63,6 +63,12 @@
 |Medium
 |Medium
 |Request test access early and define representative interface mocks for unavailable systems. Run the same contract tests against mocks and real test environments when access becomes available, and resolve any differences before release.
+
+|R-011
+|If the Backend Application, as the only container with access to the Portal Database, Document Store, and Audit Store (ADR-0002), is compromised or misconfigured, then application data and documents could be exposed and false or missing audit events could go undetected.
+|Low
+|High
+|Use separate credentials per store with least privilege, and give the Backend Application append-only access to the Audit Store. Evaluate audit integrity protection (e.g. hash chaining) in the Phase 3 audit-event prototype and test that the Backend Application cannot modify or delete existing audit events.
 |===
 
 == Notes

@@ -1,0 +1,124 @@
+= ADR-0002: External systems stay authoritative; the portal stores only portal-owned data
+:toc:
+
+== Status
+
+Accepted (2026-10-08). The ownership boundary is to be validated with one representative workflow in iteration Phase 1 (see link:../docs/iteration_plan.adoc[iteration plan]).
+
+== Context
+
+The Citizen Services Portal combines data from three independently operated external systems - Kaitseväekohustuslaste register (KVKR), Estonian Defence Forces Systems, and Health Information System (TIS) - with data the portal creates itself. Several earlier artifacts depend on a clear answer to "which data belongs where":
+
+* *R-004*: if the portal stores data that should remain authoritative in KVKR, TIS, or Estonian Defence Forces Systems, duplicated or stale sensitive data may force later redesign and create privacy risks.
+* *SG-003* and *QA-001*: health, defence-obligation, case, and document data may only be disclosed to authorized users and systems. Every additional copy of such data increases the exposure surface.
+* *QA-010*: data protection and retention rules apply to personal and health data. The portal should not take on retention obligations that belong to other organizations.
+* *SG-005* and *QA-003*: audit records must be reliable and their unauthorized change detectable, so they need stronger protection than ordinary application data.
+* *QA-002*, *QA-007*, and *QAS-001*: failure of an external system must not make unrelated portal workflows unavailable, and accepted requests must not be lost. This pulls *towards* keeping some data locally.
+* *Assumptions in link:../docs/drivers.adoc[drivers.adoc]*: the portal does not replace KVKR, TIS, or Estonian Defence Forces Systems and does not become the authoritative source for their domain data.
+* *Open question in drivers.adoc*: which data the portal must store itself beyond preferences, notifications, audit records, and temporary workflow state.
+
+The container view in link:../diagrams/workspace.dsl[workspace.dsl] already separates the Portal Database, Document Store, and Audit Store. This ADR records why, and which data each of them may hold.
+
+== Decision
+
+. *External systems remain the authoritative source* for their domain data. The portal fetches this data *on demand* through the Integration Service when a user action needs it, and does not keep persistent replicas of it.
+. *Health information from TIS is never persisted* by the portal. It is held only in memory for the duration of the request that needs it, and excluded from operational logs and audit event payloads.
+. The portal keeps only *portal-owned data*, divided over three stores by protection needs and lifecycle:
+** *Portal Database* - preferences and contact details, notification metadata, workflow coordination state for requests not yet accepted by the responsible organization (including correlation and idempotency identifiers), portal authorization configuration, and system configuration.
+** *Document Store* - documents uploaded by citizens, kept only until delivery to the responsible organization is confirmed or the agreed retention period ends.
+** *Audit Store* - append-only audit events, accessible through a separate, more restricted access path than the Portal Database.
+. *One narrow exception for availability:* the portal may keep a *status snapshot* per request or case: the external reference, the last known status, and the time it was retrieved. It contains no health data and no decision content, and is always shown to the citizen as "last known status" with its timestamp.
+. The *Backend Application is the only container that reads from and writes to the three portal stores*. The Web Application and the Integration Service do not access them directly.
+
+=== Data ownership overview
+
+[cols="3,2,3,2",options="header"]
+|===
+|Data category |Authoritative owner |Portal handling |Portal container
+
+|Citizen identity and session data
+|TARA (identity assertion); portal (session)
+|Identity attributes are taken from the TARA authentication result; only a short-lived session is kept.
+|Backend Application (session state)
+
+|Defence-obligation data and summonses
+|KVKR (KRA)
+|Fetched on demand; not persisted. Status snapshot allowed.
+|Integration Service (in transit)
+
+|Defence-service workflow data and decisions
+|Estonian Defence Forces Systems / issuing organization
+|Fetched on demand; not persisted. Status snapshot allowed.
+|Integration Service (in transit)
+
+|Health information
+|TIS (TEHIK)
+|Fetched on demand, in memory only; never persisted, never logged.
+|Integration Service (in transit)
+
+|Request workflow state before acceptance
+|Portal
+|Stored until the responsible organization accepts the request; then reduced to a reference and status snapshot.
+|Portal Database
+
+|Uploaded documents
+|Portal until delivery; then the receiving organization
+|Stored temporarily; deleted after confirmed delivery or retention expiry.
+|Document Store
+
+|Preferences, contact details, notification metadata
+|Portal
+|Stored.
+|Portal Database
+
+|Delegation and authorization data
+|Portal (configuration); legal rules owned by the service owners
+|Portal role and permission configuration is stored. The source of agency staff roles is still open.
+|Portal Database
+
+|Audit records
+|Portal (for portal actions)
+|Stored append-only with restricted access.
+|Audit Store
+|===
+
+== Alternatives considered
+
+* *Synchronized local replica of external data* (the portal keeps its own read model of KVKR, Estonian Defence Forces, and TIS data) - better response times and full availability of read views during external outages (QA-002, QA-005), but it directly creates R-004: stale or diverging copies of sensitive data, additional retention obligations (QA-010), and synchronization logic for each external system that conflicts with QA-008. Rejected, except for the minimal status snapshot.
+* *Single shared portal database* for application data, documents, and audit records - simpler to operate and cheaper (QA-012), but audit records would share access paths and administrators with ordinary application data, which weakens SG-005 and SG-010. Large documents with their own retention and scanning needs would also be mixed with transactional data. Rejected.
+* *Database per service* (each portal capability owning its own store in a microservice structure) - strongest isolation, but significant operational cost and complexity for the current team and phase (QA-012). The capability boundaries are not yet validated. Deferred: it can be reconsidered in a later ADR if Phase 2-3 results show a need.
+* *Pure pass-through portal* that stores nothing, not even workflow state - minimal data footprint, but an accepted request would be lost if an external system failed mid-workflow, violating QA-007 and QAS-001. Rejected.
+
+== Consequences
+
+* Positive:
+** The portal holds the minimum sensitive data, which reduces the impact of a portal breach (SG-003, QA-001) and keeps retention obligations with the authoritative organizations (QA-010).
+** There is a single authoritative source for each data category, so citizens do not see contradicting copies (R-004).
+** Audit records are separated from application data and its administrators, supporting SG-005, SG-010, and QA-003.
+** External-system differences stay inside the Integration Service, because no other container holds external data models (QA-008, R-007).
+* Negative or risks:
+** Views of external data are *unavailable while the external system is down*. The portal can only show a status snapshot or an explicit unavailable state (QAS-001). This is a deliberate trade-off of availability for privacy and data correctness.
+** On-demand fetching adds *latency* to many interactions and *load on external systems*, which may conflict with QA-005 and the peak scenario QAS-004, and may hit external request-rate limits (R-009).
+** Status snapshots can be *stale*. A citizen could act on an outdated status if the snapshot age is not clearly shown.
+** Temporary document storage depends on *delivery confirmations and retention rules* that are not yet agreed with KRA, the Estonian Defence Forces, and TEHIK.
+** Making the Backend Application the single writer to all three stores *concentrates privilege* in one container. A compromise or misconfiguration of the Backend Application would expose application data, documents, and the ability to write audit events (SG-007).
+** Three stores increase backup, monitoring, and operational effort (QA-012).
+* Follow-up actions:
+** Validate this ownership boundary with one representative workflow in Phase 1 (R-004, R-010) and record any data the workflow cannot do without.
+** Define, per external system, whether a short-lived in-memory cache is acceptable and with which maximum age. Record the result in a follow-up ADR if it changes this decision.
+** Agree document retention periods and delivery-confirmation behaviour with KRA, the Estonian Defence Forces, and TEHIK (open question in drivers.adoc).
+** Decide whether the Integration Service writes audit events for external exchanges directly or reports them to the Backend Application, and update the container view accordingly.
+** Decide whether agency staff roles are managed in the portal or obtained from the agencies (R-001).
+** Add the concentrated-privilege risk of the Backend Application to the link:../risk/risk_register.adoc[risk register] (R-011).
+** Update link:../docs/ownership_sketch.adoc[ownership_sketch.adoc] so that its logical responsibilities map onto the containers named here.
+
+== References
+
+* link:../docs/drivers.adoc[Drivers] - assumptions on authoritative sources; open question on portal-stored data
+* link:../docs/quality_attributes.adoc[Quality attributes] - QA-001, QA-002, QA-003, QA-005, QA-007, QA-008, QA-010, QA-012
+* link:../docs/qa_scenarios.adoc[QA scenarios] - QAS-001, QAS-004
+* link:../docs/security_goals.adoc[Security goals] - SG-003, SG-005, SG-007, SG-010; data categories
+* link:../risk/risk_register.adoc[Risk register] - R-001, R-004, R-007, R-009, R-010, R-011
+* link:../docs/ownership_sketch.adoc[Ownership sketch]
+* link:../docs/glossary.adoc[Glossary] - portal-owned data, status snapshot, authoritative source
+* link:../diagrams/workspace.dsl[Structurizr model] - container view

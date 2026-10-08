@@ -1,0 +1,231 @@
+= Glossary
+:toc:
+:toclevels: 2
+
+This glossary defines key terms and the *stable names* used across the drivers, risk register, security goals, diagrams, and ADRs.
+When a document, diagram, or ADR refers to an element listed here, it should use the stable name exactly as written in the first column.
+Element names must match the Structurizr model in link:../diagrams/workspace.dsl[diagrams/workspace.dsl] (see link:../adrs/ADR-0001-documentation-and-diagramming.adoc[ADR-0001]).
+
+== Stable names: system and containers
+
+[cols="2,1,4,2",options="header"]
+|===
+|Stable name |C4 element |Definition |Avoid / synonyms
+
+|Citizen Services Portal
+|Software system (system under design)
+|The single digital entry point through which citizens find, request, track, and manage the selected national-defence services. It integrates with, but does not replace, the external systems listed below.
+|"the system", "the platform"; "portal" alone is acceptable in prose.
+
+|Web Application
+|Container
+|User-facing interface for citizens, administrators/helpdesk staff, and auditors. Holds no authoritative data.
+|"frontend", "UI", "citizen-facing portal" (the term used in the early ownership sketch).
+
+|Backend Application
+|Container
+|Portal business logic: authorization, workflow coordination, validation, document operations, notification initiation, and the API used by the Web Application. The only container that writes to the portal-owned data stores (see link:../adrs/ADR-0002-data-ownership.adoc[ADR-0002]).
+|"API", "server", "core".
+
+|Integration Service
+|Container
+|Isolates communication with KVKR, Estonian Defence Forces Systems, and TIS: system-specific protocols, data mapping, retries, and integration failure handling.
+|"adapter layer", "gateway".
+
+|Portal Database
+|Container (data store)
+|Stores portal-owned application data: preferences and contact details, workflow coordination state, notification metadata, authorization configuration, and system configuration.
+|"DB", "main database".
+
+|Document Store
+|Container (data store)
+|Stores documents uploaded by citizens or temporarily processed by the portal until they are delivered to the responsible organization or their retention period ends.
+|"file storage", "blob store".
+
+|Audit Store
+|Container (data store)
+|Append-only store for security-relevant portal audit events, with access separated from the Portal Database.
+|"logs" (audit events are not operational logs).
+|===
+
+== Stable names: people and external systems
+
+[cols="2,1,4,2",options="header"]
+|===
+|Stable name |C4 element |Definition |Avoid / synonyms
+
+|Citizen / Resident
+|Person
+|A natural person using the portal to access their own defence-related services, or, where permitted, acting for another person under a valid delegation.
+|"user" (ambiguous: also covers staff).
+
+|Administrator / Helpdesk Staff
+|Person
+|Portal staff who provide permitted support and perform authorized administrative tasks under least privilege (SG-010).
+|"admin", "support".
+
+|Auditor / Oversight
+|Person
+|A role that reviews permitted audit and transparency information, e.g. an internal auditor or a supervisory authority.
+|"inspector".
+
+|Agency staff
+|Person (not yet in the C4 model)
+|KRA or Estonian Defence Forces staff who handle requests and decisions. Referenced in R-001, SG-002, and QAS-002; whether they use the portal or only their own agency systems is an open question.
+|"case worker", "official".
+
+|State Authentication Service (TARA)
+|External software system
+|External identity provider operated by RIA. Provides strong authentication via OIDC with supported Estonian eID methods (ID-card, Mobile-ID, Smart-ID).
+|"eID provider", "IdP", "login service".
+
+|Kaitseväekohustuslaste register (KVKR)
+|External software system
+|The defence-obligation register operated by KRA. Authoritative source for defence-obligation data, including call-up and summons information.
+|"conscription register", "KRA system".
+
+|Estonian Defence Forces Systems
+|External software system
+|Systems operated by the Estonian Defence Forces that provide data and functionality for defence-service workflows such as reserve service.
+|"EDF backend", "military systems".
+
+|Health Information System (TIS)
+|External software system
+|The national health information system (Tervise infosüsteem), accessed through TEHIK-managed interfaces. Authoritative source for health information used in health-assessment workflows.
+|"health registry", "e-health".
+
+|Email/SMS Notification Providers
+|External software system
+|Trusted third-party services that deliver portal notifications by email or SMS.
+|"messaging service".
+|===
+
+== Organizations
+
+[cols="1,4",options="header"]
+|===
+|Term |Definition
+
+|RIA
+|Riigi Infosüsteemi Amet (Information System Authority). Operates TARA and the X-tee infrastructure.
+
+|KRA
+|Kaitseressursside Amet (Estonian Defence Resources Agency). Operates KVKR and is responsible for conscription and call-up administration.
+
+|Estonian Defence Forces
+|Kaitsevägi. Owns the Estonian Defence Forces Systems and the defence-service workflows that run in them.
+
+|TEHIK
+|Tervise ja Heaolu Infosüsteemide Keskus (Health and Welfare Information Systems Centre). Manages TIS and its interfaces.
+|===
+
+== Domain terms
+
+[cols="1,4",options="header"]
+|===
+|Term |Definition
+
+|Defence obligation
+|A citizen's legal duties related to national defence, such as conscription or reserve service. Defence-obligation data is owned by KVKR.
+
+|Conscription / call-up period
+|The period in which conscripts are called up for service. Expected to cause peak demand on the portal (QAS-004, R-009).
+
+|Summons
+|An official notice requiring a citizen to appear or act, issued by the responsible agency. A type of administrative decision.
+
+|Administrative decision
+|A formal decision made by KRA or the Estonian Defence Forces about a citizen. The issuing organization's system is authoritative; the portal only presents it.
+
+|Health assessment
+|The workflow in which a citizen's fitness for service is assessed, requiring health information from TIS.
+
+|Reserve service
+|Service obligations of reservists, handled with Estonian Defence Forces Systems.
+
+|Request
+|A citizen-initiated submission through the portal (e.g. an application, a response to a summons, a requested document). The portal owns a request's workflow state until it is accepted by the responsible organization.
+
+|Case
+|The administrative matter a request belongs to, as tracked by the responsible organization. After handover, the external system is authoritative for its status and outcome.
+
+|Accepted request
+|A request the portal has confirmed to the citizen as received. Accepted requests must not be lost or processed twice (QA-007).
+
+|Delegation
+|Authority granted by one citizen to another person to act on their behalf. Delegation rules are service-specific and may prohibit delegation for national-defence services.
+
+|Authoritative source
+|The system whose record is the legally and operationally valid version of a piece of data. The portal is not the authoritative source for KVKR, TIS, or Estonian Defence Forces data (ADR-0002).
+
+|Portal-owned data
+|Data for which the Citizen Services Portal is the authoritative source: preferences, contact details, notification metadata, workflow coordination state, uploaded documents awaiting delivery, audit events, and configuration (ADR-0002).
+
+|Status snapshot
+|A non-authoritative, time-stamped copy of a request or case status kept by the portal so it can show the last known state when an external system is unavailable (ADR-0002).
+
+|Audit event
+|A record of a security-relevant action, containing at least actor, action, affected resource, timestamp, and outcome (SG-005, QA-003).
+
+|Transparency information
+|The subset of audit events that may legally be shown to the affected citizen, e.g. which organization accessed their data and when (QA-009).
+|===
+
+== Architecture and security terms
+
+[cols="1,4",options="header"]
+|===
+|Term |Definition
+
+|ADR
+|Architecture Decision Record: a short document recording one architecture decision, its context, alternatives, and consequences. Stored in link:../adrs/[adrs/].
+
+|C4 model
+|A hierarchical way of describing software architecture through Context, Container, Component, and Code views. Each diagram uses one level of abstraction.
+
+|Container (C4)
+|A separately deployable or runnable unit, such as an application or a data store. Not the same as a Docker container.
+
+|Architecture-critical driver
+|One of the top five quality attributes that most strongly shape the architecture: QA-001, QA-002, QA-003, QA-004, QA-007.
+
+|QA scenario
+|A quality attribute scenario: a testable statement of a quality requirement, with stimulus, source, environment, artifact, response, and response measure. See link:qa_scenarios.adoc[qa_scenarios.adoc].
+
+|Trust boundary
+|A boundary where data or control passes between parties with different levels of trust, e.g. citizen device ↔ portal, or portal ↔ external system. See link:security_goals.adoc[security_goals.adoc].
+
+|OIDC
+|OpenID Connect, the authentication protocol used between the Backend Application and TARA.
+
+|X-tee
+|The Estonian X-Road data exchange layer for secure, authenticated machine-to-machine exchange between public-sector systems.
+
+|Contract test
+|An automated test verifying that an integration still conforms to the agreed interface of an external system (QA-004, R-007).
+
+|PoC
+|Proof of concept: a small implementation that validates a risky assumption. Validated results are merged into the runnable architecture baseline.
+
+|Runnable architecture baseline
+|The evolving executable skeleton of the architecture that PoC results are incorporated into (see link:iteration_plan.adoc[iteration_plan.adoc]).
+
+|Degraded mode
+|Operation where some external system is unavailable and the portal returns explicit unavailable or pending states for affected operations while unrelated workflows continue (QAS-001).
+
+|Least privilege
+|Granting users and components only the access they need for their task (SG-010).
+|===
+
+== Identifier conventions
+
+[cols="1,3,2",options="header"]
+|===
+|Prefix |Meaning |Defined in
+
+|QA-nnn |Quality attribute or constraint |link:quality_attributes.adoc[quality_attributes.adoc], link:drivers.adoc[drivers.adoc]
+|QAS-nnn |Quality attribute scenario |link:qa_scenarios.adoc[qa_scenarios.adoc]
+|SG-nnn |Security goal |link:security_goals.adoc[security_goals.adoc]
+|R-nnn |Technical risk |link:../risk/risk_register.adoc[risk/risk_register.adoc]
+|ADR-nnnn |Architecture decision record |link:../adrs/README.adoc[adrs/README.adoc]
+|===

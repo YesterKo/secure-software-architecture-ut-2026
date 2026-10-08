@@ -1,0 +1,65 @@
+= ADR-0001: Documentation and diagramming approach
+:toc:
+
+== Status
+
+Accepted (2026-10-08)
+
+== Context
+
+The architecture of the Citizen Services Portal is developed by a three-person team and reviewed by instructors at checkpoints, directly from the GitHub repository.
+The documentation therefore has to be:
+
+* *consistent* - the same element (for example "Integration Service" or "Health Information System (TIS)") must have the same name and description in the context view, the container view, the drivers, the risk register, and the ADRs. The checkpoint quality bar explicitly requires that diagrams, drivers, and risks use consistent names;
+* *reviewable and versioned* - changes must be visible in Git history and traceable to issues, like any other project work;
+* *editable by every team member* - diagrams need an editable source next to a readable export;
+* *evolvable* - more views (component views, deployment) will be added in later weeks, and the container structure is expected to change as risks are retired (see link:../docs/iteration_plan.adoc[iteration plan]).
+
+The course starter repository already provides AsciiDoc documents and templates, and the course recommends a C4-specific modelling tool such as Structurizr over a pure drawing tool.
+
+== Decision
+
+We use a *docs-as-code* approach, with all architecture documentation stored in the team repository:
+
+. *Text documents* are written in AsciiDoc (`.adoc`) in the existing structure: `/docs/`, `/risk/`, `/adrs/`, `/api/`, `/ops/`.
+. *Architecture diagrams* follow the C4 model and are defined as a single *Structurizr DSL* model in link:../diagrams/workspace.dsl[diagrams/workspace.dsl]. All C4 views (context, container, and later component and deployment views) are generated from this one model, so an element is defined once and reused across views.
+. The Structurizr layout file `diagrams/workspace.json` is committed together with the DSL so that manual layout is preserved.
+. Each view is exported as PNG to `/diagrams/c4-<view>.png` (currently `c4-context.png` and `c4-container.png`) and committed together with the DSL change that produced it. Documents embed or link these exports.
+. Element names in the model are the *stable names* defined in link:../docs/glossary.adoc[docs/glossary.adoc]. A new or renamed element is added to the glossary in the same commit.
+. Architecture decisions are recorded as ADRs in `/adrs/` using the course template link:ADR-0001-template.adoc[ADR-0001-template.adoc], numbered sequentially (`ADR-nnnn-<short-title>.adoc`) and listed in link:README.adoc[adrs/README.adoc]. Accepted ADRs are not rewritten; a changed decision is recorded in a new ADR that supersedes the old one.
+. Changes are committed with messages referencing the related GitHub issue where one exists.
+
+== Alternatives considered
+
+* *diagrams.net (draw.io) or another general drawing tool* - easy to learn and flexible for trust-boundary visuals, but every view is drawn separately, so names and relationships drift between context and container views. The XML source produces diffs that are hard to review.
+* *C4-PlantUML or Mermaid C4* - text-based and diffable, but each diagram is still a separate file with no shared model, so consistency between views depends on manual discipline. Mermaid C4 support is still limited.
+* *Markdown instead of AsciiDoc* - more familiar to some team members, but the starter files and templates are AsciiDoc, and AsciiDoc tables, includes, and cross-references fit the scenario tables and risk register better.
+* *External wiki or shared online documents* - convenient for simultaneous editing, but outside the official submission location reviewed at checkpoints, and not versioned together with the diagrams and ADRs.
+
+== Consequences
+
+* Positive:
+** Context and container views come from one model, so elements and relationships stay consistent across views by construction.
+** All artifacts are versioned, diffable, and reviewable through Git history and pull requests.
+** Adding later views (component, deployment) reuses existing elements instead of redrawing them.
+** The glossary and the model reinforce each other as the source of stable names.
+* Negative or risks:
+** PNG exports are produced manually and can become *stale* relative to the DSL, so a reviewer may see a diagram that does not match the model.
+** Structurizr DSL has a learning curve and requires running Structurizr locally (e.g. Structurizr Lite via Docker) or using the online tool to render and export.
+** Automatic layout is limited, and *trust boundaries are not a native C4 element*; they must be modelled with groups or styling, which the current diagrams do not show yet.
+** `workspace.json` layout diffs are noisy and can cause merge conflicts if two members edit the layout at the same time.
+* Follow-up actions:
+** Add the trust boundaries from link:../docs/security_goals.adoc[security_goals.adoc] to the model using Structurizr `group` elements and re-export both diagrams before Checkpoint 1.
+** Extend link:../diagrams/README.adoc[diagrams/README.adoc] with a title and caption for each diagram and a short export procedure (tool, version, steps).
+** Before each checkpoint, check that the PNG exports match the current DSL and that all element names appear in the glossary.
+** Agree that only one person edits the diagram layout at a time, or coordinate layout changes through an issue.
+
+== References
+
+* link:../docs/glossary.adoc[Glossary - stable names]
+* link:../diagrams/workspace.dsl[Structurizr model (diagrams/workspace.dsl)]
+* link:../docs/architecture.adoc[Architecture document]
+* link:../docs/iteration_plan.adoc[Iteration plan] - expected evolution of views across phases
+* link:../docs/security_goals.adoc[Security goals - trust boundaries]
+* C4 model: https://c4model.com/
+* Structurizr DSL: https://docs.structurizr.com/dsl

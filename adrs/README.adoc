@@ -1,11 +1,28 @@
 = Architecture Decision Records
 
-Use one file per important architecture decision.
+Use one file per important architecture decision, based on link:ADR-0001-template.adoc[ADR-0001-template.adoc].
 
-Suggested naming:
-
-* `ADR-0001-documentation-and-diagramming.adoc`
-* `ADR-0002-data-ownership.adoc`
-* `ADR-0003-identity-and-access.adoc`
+Naming: `ADR-nnnn-<short-title>.adoc`, numbered sequentially. Accepted ADRs are not rewritten; a changed decision is recorded in a new ADR that supersedes the old one.
 
 Each ADR should state context, decision, alternatives, consequences, and follow-up actions.
+
+== Index
+
+[cols="1,4,1,2",options="header"]
+|===
+|ID |Decision |Status |Related drivers / risks
+
+|link:ADR-0001-documentation-and-diagramming.adoc[ADR-0001]
+|Documentation and diagramming approach: docs-as-code in AsciiDoc, a single Structurizr DSL model for all C4 views, and stable names from the glossary.
+|Accepted
+|Checkpoint consistency requirement; trust boundaries from SG goals
+
+|link:ADR-0002-data-ownership.adoc[ADR-0002]
+|External systems stay authoritative; the portal stores only portal-owned data, split over Portal Database, Document Store, and Audit Store.
+|Accepted
+|QA-001, QA-002, QA-003, QA-007, QA-010; SG-003, SG-005; R-004, R-011
+|===
+
+== Planned
+
+* ADR-0003: Identity, authorization, and delegation model (R-001, R-005, SG-001, SG-002)
