@@ -109,8 +109,8 @@ The container view in link:../diagrams/workspace.dsl[workspace.dsl] already sepa
 ** Agree document retention periods and delivery-confirmation behaviour with KRA, the Estonian Defence Forces, and TEHIK (open question in drivers.adoc).
 ** Decide whether the Integration Service writes audit events for external exchanges directly or reports them to the Backend Application, and update the container view accordingly.
 ** Decide whether agency staff roles are managed in the portal or obtained from the agencies (R-001).
-** Add the concentrated-privilege risk of the Backend Application to the link:../risk/risk_register.adoc[risk register] (R-011).
-** Update link:../docs/ownership_sketch.adoc[ownership_sketch.adoc] so that its logical responsibilities map onto the containers named here.
+** _Done:_ concentrated-privilege risk of the Backend Application added to the link:../risk/risk_register.adoc[risk register] as R-011.
+** _Done:_ link:../docs/ownership_sketch.adoc[ownership_sketch.adoc] updated so that its logical responsibilities map onto the containers named here.
 
 == References
 

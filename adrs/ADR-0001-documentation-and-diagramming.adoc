@@ -46,11 +46,11 @@ We use a *docs-as-code* approach, with all architecture documentation stored in 
 * Negative or risks:
 ** PNG exports are produced manually and can become *stale* relative to the DSL, so a reviewer may see a diagram that does not match the model.
 ** Structurizr DSL has a learning curve and requires running Structurizr locally (e.g. Structurizr in local mode via Docker) or using the online tool to render and export.
-** Automatic layout is limited, and *trust boundaries are not a native C4 element*; they must be modelled with groups or styling, which the current diagrams do not show yet.
+** Automatic layout is limited, and *trust boundaries are not a native C4 element*; they are modelled with Structurizr groups, which become hard to read if elements are not laid out carefully (overlapping group outlines).
 ** `workspace.json` layout diffs are noisy and can cause merge conflicts if two members edit the layout at the same time.
 * Follow-up actions:
-** Add the trust boundaries from link:../docs/security_goals.adoc[security_goals.adoc] to the model using Structurizr `group` elements and re-export both diagrams before Checkpoint 1.
-** Extend link:../diagrams/README.adoc[diagrams/README.adoc] with a title and caption for each diagram and a short export procedure (tool, version, steps).
+** _Done:_ trust boundaries from link:../docs/security_goals.adoc[security_goals.adoc] added to the model as Structurizr groups (one per organization in the context view, three security zones in the container view).
+** _Done:_ link:../diagrams/README.adoc[diagrams/README.adoc] extended with a caption for each diagram and the export procedure.
 ** Before each checkpoint, check that the PNG exports match the current DSL and that all element names appear in the glossary.
 ** Agree that only one person edits the diagram layout at a time, or coordinate layout changes through an issue.
 
