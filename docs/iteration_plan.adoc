@@ -1,5 +1,7 @@
 = Iteration Plan
 
+The iterations are risk-driven, but PoCs are not treated as standalone end products. Validated results are incorporated into a runnable architecture baseline, which is extended and refined in subsequent phases.
+
 [cols="1,3,3,2,4", options="header"]
 |===
 | Phase
@@ -18,22 +20,24 @@ a|* Required operations can be exercised through documented interfaces, test env
 
 |2
 |*Validate identity, authorization, and multi-system workflow behavior*
-|TARA authentication PoC; role/permission matrix and authorization tests; representative multi-system workflow with failure injection.
+|TARA authentication PoC; role/permission matrix and authorization tests; first runnable architecture baseline containing a representative end-to-end workflow.
 |R-001, R-005, R-006
 a| * Supported authentication flows work against the TARA demo environment.
 * Allowed and denied authorization cases behave as expected.
 * Injected failures and retries do not lose or duplicate accepted requests.
+* A representative workflow runs end-to-end through the initial architecture baseline.
 
 |3
 |*Validate auditability, privacy, and interface evolution*
-|Audit-event prototype; privacy review; contract and regression tests for external integrations.
+|Audit-event prototype; privacy review; contract and regression tests integrated with the runnable architecture baseline.
 |R-007, R-008
 a| * Required security-relevant actions produce the expected audit records without unnecessary sensitive data.
 * A simulated compatible or breaking external-interface change remains isolated to the affected integration.
+* The runnable baseline incorporates the validated audit and integration behavior and remains covered by regression tests.
 
 |4
-|*Validate capacity and establish the runnable architecture baseline*
-|Load tests at normal and five-times-normal workload; runnable architecture baseline with the validated integrations and workflows.
+|*Validate capacity and consolidate the runnable architecture baseline*
+|Load tests at normal and five-times-normal workload; consolidated runnable architecture baseline.
 |R-009 and remaining unresolved risks
 a| * Measured response time, error rate, throughput, and resource use meet the agreed targets or reveal concrete bottlenecks.
 * High-impact architectural assumptions have either been validated or turned into explicit remaining risks.
