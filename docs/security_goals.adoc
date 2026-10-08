@@ -30,7 +30,7 @@
 |Repudiation / tampering
 
 |SG-006
-|Data exchanged with KVKR, TIS, and Estonian Defence Forces systems must only use trusted and authenticated interfaces/connections.
+|Data exchanged with external systems and services must only use trusted and authenticated interfaces/connections.
 |External-system data and interfaces
 |Spoofing / tampering
 
@@ -66,15 +66,34 @@
 * Citizen-facing functionality ↔ privileged staff/administrative functionality
 
 == Important data categories
+[cols="4,1,1,1",options="header"]
+|===
+|Data category |Confidentiality |Integrity |Availablity
 
-* Citizen identity and session data
-* Defence-obligation and case data
-* Health information received from TIS
-* Summonses and administrative decisions
-* Uploaded and generated documents
-* Delegation and authorization data
-* Audit records
-* Notification and contact data
+| Citizen identity and session data
+|High|High|High
+
+| Defence-obligation and case data
+|High|High|Medium
+
+| Health information received from TIS
+|High|High|Medium
+
+| Summonses and administrative decisions
+|High|High|High
+
+| Uploaded and generated documents
+|High|High|Medium
+
+| Delegation and authorization data
+|Medium|High|High
+
+| Audit records
+|High|High|Medium
+
+| Notification and contact data
+|High|High|Medium
+|===
 
 == Attacker and abuse assumptions
 
