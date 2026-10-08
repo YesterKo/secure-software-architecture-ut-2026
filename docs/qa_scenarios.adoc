@@ -1,4 +1,7 @@
-== Quality Attribute Scenarios
+= Quality Attribute Scenarios
+:toc:
+
+== Scenarios
 
 [cols="2,3,8"]
 |===

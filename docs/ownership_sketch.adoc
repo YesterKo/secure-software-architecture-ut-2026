@@ -1,32 +1,70 @@
 = Ownership Sketch
 
-The following are initial ownership assumptions. They do not define the final container structure.
+The following are initial ownership assumptions, aligned with the containers in the C4 container view (link:architecture.adoc#_4_containers[architecture.adoc, section 4]) and the data ownership decision in link:../adrs/ADR-0002-data-ownership.adoc[ADR-0002].
 
-[cols="3,4,3",options="header"]
+== Portal containers
+
+[cols="2,4,3",options="header"]
 |===
-|Container/service |Responsibility |Ownership assumption
+|Container |Responsibility |Ownership assumption
 
-|Citizen-facing portal
+|Web Application
 |User interface, service catalogue, profile, case/status presentation, document interaction.
 |Citizen Services Portal team.
 
-|Case/workflow handling
-|Coordinates portal-side request state and workflows involving external systems.
-|Citizen Services Portal team.
+|Backend Application
+|Identity and access (TARA integration, sessions, authorization, permitted delegation), case/workflow coordination, document handling and signing coordination, notification initiation, and audit event creation.
+|Citizen Services Portal team. The identity and access and audit parts are reviewed by the portal security team.
 
-|Identity and access
-|TARA integration, portal sessions, authorization, roles, and permitted delegation.
-|Portal/security team. TARA itself remains externally owned by RIA.
+|Integration Service
+|Communication with KVKR, TIS, and Estonian Defence Forces Systems; isolates external interface differences from the rest of the portal.
+|Portal integration team. Each adapter has a named contact person in the external organization.
 
-|External-system integrations
-|Communication with KVKR, TIS, and Estonian Defence Forces systems; isolates external interface differences from the rest of the portal.
-|Portal integration team. External systems remain owned by their respective organizations.
+|Portal Database
+|Portal-owned application data (preferences, workflow state, notification metadata, configuration).
+|Citizen Services Portal team; operated by the platform team.
 
-|Audit and transparency
-|Records security-relevant actions and provides the information that may be exposed to citizens or auditors.
-|Portal/security team.
+|Document Store
+|Uploaded documents until delivery or retention expiry.
+|Citizen Services Portal team; operated by the platform team. Retention rules agreed with the receiving organizations.
 
-|Notifications
-|Creates and sends portal notifications through supported channels.
-|Portal/platform team. Email/SMS delivery infrastructure remains externally owned.
+|Audit Store
+|Append-only audit events and transparency information.
+|Portal security team. Administrators of the Portal Database do not have write access to the Audit Store.
 |===
+
+== External systems
+
+[cols="2,4,3",options="header"]
+|===
+|System |Responsibility |Owner
+
+|State Authentication Service (TARA)
+|Authentication of citizens and staff.
+|RIA
+
+|Kaitseväekohustuslaste register (KVKR)
+|Defence-obligation data, call-up, summonses.
+|KRA
+
+|Estonian Defence Forces Systems
+|Defence-service and reserve-service workflows and decisions.
+|Estonian Defence Forces
+
+|Health Information System (TIS)
+|Health information.
+|TEHIK
+
+|Email/SMS Notification Providers
+|Notification delivery infrastructure.
+|Third-party providers under contract
+|===
+
+== Changes from the earlier sketch
+
+The earlier sketch listed six logical services: citizen-facing portal, case/workflow handling, identity and access, external-system integrations, audit and transparency, and notifications. In the container view they map as follows:
+
+* *Citizen-facing portal* became the Web Application.
+* *Case/workflow handling, identity and access, and notifications* are logical responsibilities inside the Backend Application rather than separate containers. Splitting them is deferred until boundaries are validated (see ADR-0002, alternatives).
+* *External-system integrations* became the Integration Service.
+* *Audit and transparency* is split between the Backend Application (creating events and filtering views) and the Audit Store (storage).

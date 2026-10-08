@@ -1,10 +1,34 @@
 = Diagrams
 
-Keep exported diagrams and editable sources in this directory.
+Exported diagrams and their editable source live in this directory (see link:../adrs/ADR-0001-documentation-and-diagramming.adoc[ADR-0001]).
 
-For each diagram, include:
+* Editable source: link:workspace.dsl[workspace.dsl] (Structurizr DSL). `workspace.json` stores the manual layout.
+* Element names follow the link:../docs/glossary.adoc[glossary].
 
-* title;
-* short caption explaining what question the diagram answers;
-* editable source if available;
-* exported image or PDF used in presentations and documents.
+== C4 system context diagram
+
+image::c4-context.png[C4 system context diagram]
+
+* File: link:c4-context.png[c4-context.png] (view `C4Context`)
+* Caption: Who uses the Citizen Services Portal, which external systems it depends on, and which trust boundary (organization) each actor and system belongs to.
+
+== C4 container diagram
+
+image::c4-container.png[C4 container diagram]
+
+* File: link:c4-container.png[c4-container.png] (view `C4Container`)
+* Caption: The applications and data stores inside the Citizen Services Portal, their responsibilities, the security zones they run in, and how they connect to external systems.
+
+== Export procedure
+
+. Start Structurizr in local mode (the successor of Structurizr Lite) from the repository root:
++
+[source,powershell]
+----
+docker run -it --rm -p 8080:8080 -v "${PWD}\diagrams:/usr/local/structurizr" structurizr/structurizr local
+----
++
+On macOS/Linux, use `-v "$(pwd)/diagrams:/usr/local/structurizr"` instead.
+. Open http://localhost:8080, open each view, and adjust the layout in the diagram editor if needed. Layout changes are saved automatically to `workspace.json`.
+. Export each view as PNG and save it as `c4-context.png` or `c4-container.png` in this directory.
+. Commit the DSL, `workspace.json`, and the PNGs together.

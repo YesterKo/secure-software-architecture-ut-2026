@@ -1,520 +1,677 @@
 {
-  "configuration" : {
-    "scope" : "SoftwareSystem"
+  "configuration": {
+    "scope": "SoftwareSystem"
   },
-  "description" : "C4 architecture model for the Citizen Services Portal",
-  "documentation" : { },
-  "id" : 1,
-  "lastModifiedAgent" : "structurizr/diagrams/ccd66166-027d-4e5f-95d9-1857ca6914f1",
-  "lastModifiedDate" : "2026-10-08T08:09:54Z",
-  "lastModifiedUser" : "2117027250",
-  "model" : {
-    "people" : [ {
-      "description" : "Uses digital citizen services through a unified portal.",
-      "id" : "1",
-      "name" : "Citizen / Resident",
-      "properties" : {
-        "structurizr.dsl.identifier" : "citizen"
-      },
-      "relationships" : [ {
-        "description" : "Uses to access citizen services",
-        "destinationId" : "5",
-        "id" : "16",
-        "sourceId" : "1",
-        "tags" : "Relationship"
-      }, {
-        "description" : "Uses to access citizen services",
-        "destinationId" : "4",
-        "id" : "17",
-        "linkedRelationshipId" : "16",
-        "sourceId" : "1"
-      } ],
-      "tags" : "Element,Person"
-    }, {
-      "description" : "Provides permitted support and performs authorized administrative tasks.",
-      "id" : "2",
-      "name" : "Administrator / Helpdesk Staff",
-      "properties" : {
-        "structurizr.dsl.identifier" : "administrator"
-      },
-      "relationships" : [ {
-        "description" : "Uses for permitted support and administration",
-        "destinationId" : "5",
-        "id" : "18",
-        "sourceId" : "2",
-        "tags" : "Relationship"
-      }, {
-        "description" : "Uses for permitted support and administration",
-        "destinationId" : "4",
-        "id" : "19",
-        "linkedRelationshipId" : "18",
-        "sourceId" : "2"
-      } ],
-      "tags" : "Element,Person"
-    }, {
-      "description" : "Reviews permitted audit and transparency information.",
-      "id" : "3",
-      "name" : "Auditor / Oversight",
-      "properties" : {
-        "structurizr.dsl.identifier" : "auditor"
-      },
-      "relationships" : [ {
-        "description" : "Uses to review permitted audit and transparency information",
-        "destinationId" : "5",
-        "id" : "20",
-        "sourceId" : "3",
-        "tags" : "Relationship"
-      }, {
-        "description" : "Uses to review permitted audit and transparency information",
-        "destinationId" : "4",
-        "id" : "21",
-        "linkedRelationshipId" : "20",
-        "sourceId" : "3"
-      } ],
-      "tags" : "Element,Person"
-    } ],
-    "softwareSystems" : [ {
-      "containers" : [ {
-        "description" : "Provides the user-facing interface for citizens, support staff, and auditors.",
-        "documentation" : { },
-        "id" : "5",
-        "name" : "Web Application",
-        "properties" : {
-          "structurizr.dsl.identifier" : "portal.web"
+  "description": "C4 architecture model for the Citizen Services Portal",
+  "documentation": {},
+  "id": 1,
+  "lastModifiedDate": "2026-10-08T20:25:22Z",
+  "model": {
+    "people": [
+      {
+        "description": "Uses digital citizen services through a unified portal.",
+        "group": "Trust boundary: Public internet (untrusted)",
+        "id": "1",
+        "name": "Citizen / Resident",
+        "properties": {
+          "structurizr.dsl.identifier": "citizen"
         },
-        "relationships" : [ {
-          "description" : "Requests portal data and operations from",
-          "destinationId" : "6",
-          "id" : "22",
-          "sourceId" : "5",
-          "tags" : "Relationship"
-        } ],
-        "tags" : "Element,Container,Web"
-      }, {
-        "description" : "Provides portal business logic, authorization, workflow coordination, validation, document operations, notification initiation, and the API used by the Web Application.",
-        "documentation" : { },
-        "id" : "6",
-        "name" : "Backend Application",
-        "properties" : {
-          "structurizr.dsl.identifier" : "portal.backend"
+        "relationships": [
+          {
+            "description": "Uses to access citizen services",
+            "destinationId": "5",
+            "id": "18",
+            "sourceId": "1",
+            "tags": "Relationship",
+            "technology": "HTTPS"
+          },
+          {
+            "description": "Uses to access citizen services",
+            "destinationId": "4",
+            "id": "19",
+            "linkedRelationshipId": "18",
+            "sourceId": "1",
+            "technology": "HTTPS"
+          }
+        ],
+        "tags": "Element,Person"
+      },
+      {
+        "description": "Provides permitted support and performs authorized administrative tasks.",
+        "group": "Trust boundary: Staff and oversight (privileged)",
+        "id": "2",
+        "name": "Administrator / Helpdesk Staff",
+        "properties": {
+          "structurizr.dsl.identifier": "administrator"
         },
-        "relationships" : [ {
-          "description" : "Uses for user authentication",
-          "destinationId" : "11",
-          "id" : "23",
-          "sourceId" : "6",
-          "tags" : "Relationship",
-          "technology" : "OIDC"
-        }, {
-          "description" : "Reads from and writes portal-owned app data",
-          "destinationId" : "8",
-          "id" : "25",
-          "sourceId" : "6",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Stores and retrieves documents",
-          "destinationId" : "9",
-          "id" : "26",
-          "sourceId" : "6",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Writes audit events and reads permitted audit information",
-          "destinationId" : "10",
-          "id" : "27",
-          "sourceId" : "6",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Sends notification requests",
-          "destinationId" : "15",
-          "id" : "28",
-          "sourceId" : "6",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Requests external data and operations via",
-          "destinationId" : "7",
-          "id" : "30",
-          "sourceId" : "6",
-          "tags" : "Relationship"
-        } ],
-        "tags" : "Element,Container"
-      }, {
-        "description" : "Isolates external-system integrations and handles system-specific communication, data mapping, and integration failures.",
-        "documentation" : { },
-        "id" : "7",
-        "name" : "Integration Service",
-        "properties" : {
-          "structurizr.dsl.identifier" : "portal.integration"
+        "relationships": [
+          {
+            "description": "Uses for permitted support and administration",
+            "destinationId": "5",
+            "id": "20",
+            "sourceId": "2",
+            "tags": "Relationship",
+            "technology": "HTTPS"
+          },
+          {
+            "description": "Uses for permitted support and administration",
+            "destinationId": "4",
+            "id": "21",
+            "linkedRelationshipId": "20",
+            "sourceId": "2",
+            "technology": "HTTPS"
+          }
+        ],
+        "tags": "Element,Person"
+      },
+      {
+        "description": "Reviews permitted audit and transparency information.",
+        "group": "Trust boundary: Staff and oversight (privileged)",
+        "id": "3",
+        "name": "Auditor / Oversight",
+        "properties": {
+          "structurizr.dsl.identifier": "auditor"
         },
-        "relationships" : [ {
-          "description" : "Exchanges required defence-obligation data",
-          "destinationId" : "12",
-          "id" : "31",
-          "sourceId" : "7",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Exchanges required defence-service workflow data",
-          "destinationId" : "13",
-          "id" : "33",
-          "sourceId" : "7",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Requests required health information",
-          "destinationId" : "14",
-          "id" : "35",
-          "sourceId" : "7",
-          "tags" : "Relationship",
-          "technology" : "X-tee"
-        } ],
-        "tags" : "Element,Container"
-      }, {
-        "description" : "Stores portal-owned application data such as preferences, workflow coordination state, notification metadata, and configuration.",
-        "documentation" : { },
-        "id" : "8",
-        "name" : "Portal Database",
-        "properties" : {
-          "structurizr.dsl.identifier" : "portal.db"
+        "relationships": [
+          {
+            "description": "Uses to review permitted audit and transparency information",
+            "destinationId": "5",
+            "id": "22",
+            "sourceId": "3",
+            "tags": "Relationship",
+            "technology": "HTTPS"
+          },
+          {
+            "description": "Uses to review permitted audit and transparency information",
+            "destinationId": "4",
+            "id": "23",
+            "linkedRelationshipId": "22",
+            "sourceId": "3",
+            "technology": "HTTPS"
+          }
+        ],
+        "tags": "Element,Person"
+      },
+      {
+        "description": "Kaitseressursside Amet staff who process defence-obligation requests and issue summonses and decisions.",
+        "group": "Trust boundary: KRA",
+        "id": "12",
+        "name": "KRA Staff",
+        "properties": {
+          "structurizr.dsl.identifier": "kraStaff"
         },
-        "tags" : "Element,Container,Database"
-      }, {
-        "description" : "Stores documents retained or temporarily processed by the portal.",
-        "documentation" : { },
-        "id" : "9",
-        "name" : "Document Store",
-        "properties" : {
-          "structurizr.dsl.identifier" : "portal.documents"
+        "relationships": [
+          {
+            "description": "Processes forwarded requests and issues summonses and decisions in",
+            "destinationId": "13",
+            "id": "24",
+            "sourceId": "12",
+            "tags": "Relationship"
+          }
+        ],
+        "tags": "Element,Person"
+      },
+      {
+        "description": "Estonian Defence Forces staff who process defence-service requests and decisions.",
+        "group": "Trust boundary: Estonian Defence Forces",
+        "id": "14",
+        "name": "Defence Forces Staff",
+        "properties": {
+          "structurizr.dsl.identifier": "edfStaff"
         },
-        "tags" : "Element,Container,Store"
-      }, {
-        "description" : "Stores security-relevant portal audit events with restricted access and integrity requirements.",
-        "documentation" : { },
-        "id" : "10",
-        "name" : "Audit Store",
-        "properties" : {
-          "structurizr.dsl.identifier" : "portal.audit"
+        "relationships": [
+          {
+            "description": "Processes defence-service requests and decisions in",
+            "destinationId": "15",
+            "id": "25",
+            "sourceId": "14",
+            "tags": "Relationship"
+          }
+        ],
+        "tags": "Element,Person"
+      }
+    ],
+    "softwareSystems": [
+      {
+        "containers": [
+          {
+            "description": "Provides the user-facing interface for citizens, support staff, and auditors. Holds no authoritative data.",
+            "documentation": {},
+            "group": "Public-facing zone",
+            "id": "5",
+            "name": "Web Application",
+            "properties": {
+              "structurizr.dsl.identifier": "portal.web"
+            },
+            "relationships": [
+              {
+                "description": "Requests portal data and operations from",
+                "destinationId": "6",
+                "id": "26",
+                "sourceId": "5",
+                "tags": "Relationship"
+              }
+            ],
+            "tags": "Element,Container,Web"
+          },
+          {
+            "description": "Provides portal business logic, authentication handling, authorization, workflow coordination, validation, document handling (malware scanning, signing coordination), notification initiation, audit event creation, and the API used by the Web Application.",
+            "documentation": {},
+            "group": "Internal application zone",
+            "id": "6",
+            "name": "Backend Application",
+            "properties": {
+              "structurizr.dsl.identifier": "portal.backend"
+            },
+            "relationships": [
+              {
+                "description": "Uses for user authentication",
+                "destinationId": "11",
+                "id": "27",
+                "sourceId": "6",
+                "tags": "Relationship",
+                "technology": "OIDC"
+              },
+              {
+                "description": "Reads from and writes portal-owned app data",
+                "destinationId": "8",
+                "id": "29",
+                "sourceId": "6",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Stores and retrieves documents",
+                "destinationId": "9",
+                "id": "30",
+                "sourceId": "6",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Appends audit events and reads permitted audit information",
+                "destinationId": "10",
+                "id": "31",
+                "sourceId": "6",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Sends notification requests without sensitive content",
+                "destinationId": "17",
+                "id": "32",
+                "sourceId": "6",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Requests external data and operations via",
+                "destinationId": "7",
+                "id": "34",
+                "sourceId": "6",
+                "tags": "Relationship"
+              }
+            ],
+            "tags": "Element,Container"
+          },
+          {
+            "description": "Isolates external-system integrations and handles system-specific communication, data mapping, and integration failures. Has no access to portal data stores.",
+            "documentation": {},
+            "group": "Internal application zone",
+            "id": "7",
+            "name": "Integration Service",
+            "properties": {
+              "structurizr.dsl.identifier": "portal.integration"
+            },
+            "relationships": [
+              {
+                "description": "Exchanges required defence-obligation data",
+                "destinationId": "13",
+                "id": "35",
+                "sourceId": "7",
+                "tags": "Relationship",
+                "technology": "X-tee (assumed)"
+              },
+              {
+                "description": "Exchanges required defence-service workflow data",
+                "destinationId": "15",
+                "id": "37",
+                "sourceId": "7",
+                "tags": "Relationship",
+                "technology": "X-tee (assumed)"
+              },
+              {
+                "description": "Requests required health information",
+                "destinationId": "16",
+                "id": "39",
+                "sourceId": "7",
+                "tags": "Relationship",
+                "technology": "X-tee"
+              }
+            ],
+            "tags": "Element,Container"
+          },
+          {
+            "description": "Stores portal-owned application data such as preferences, workflow coordination state, notification metadata, and configuration.",
+            "documentation": {},
+            "group": "Restricted data zone",
+            "id": "8",
+            "name": "Portal Database",
+            "properties": {
+              "structurizr.dsl.identifier": "portal.db"
+            },
+            "tags": "Element,Container,Database"
+          },
+          {
+            "description": "Stores uploaded documents until confirmed delivery to the responsible organization or retention expiry.",
+            "documentation": {},
+            "group": "Restricted data zone",
+            "id": "9",
+            "name": "Document Store",
+            "properties": {
+              "structurizr.dsl.identifier": "portal.documents"
+            },
+            "tags": "Element,Container,Store"
+          },
+          {
+            "description": "Stores security-relevant portal audit events append-only, with restricted access and integrity requirements.",
+            "documentation": {},
+            "group": "Restricted data zone",
+            "id": "10",
+            "name": "Audit Store",
+            "properties": {
+              "structurizr.dsl.identifier": "portal.audit"
+            },
+            "tags": "Element,Container,Store"
+          }
+        ],
+        "description": "Provides a unified digital entry point for interacting with digital services and registries.",
+        "documentation": {},
+        "id": "4",
+        "name": "Citizen Services Portal",
+        "properties": {
+          "structurizr.dsl.identifier": "portal"
         },
-        "tags" : "Element,Container,Store"
-      } ],
-      "description" : "Provides a unified digital entry point for interacting with digital services and registries.",
-      "documentation" : { },
-      "id" : "4",
-      "name" : "Citizen Services Portal",
-      "properties" : {
-        "structurizr.dsl.identifier" : "portal"
+        "relationships": [
+          {
+            "description": "Uses for user authentication",
+            "destinationId": "11",
+            "id": "28",
+            "linkedRelationshipId": "27",
+            "sourceId": "4",
+            "technology": "OIDC"
+          },
+          {
+            "description": "Sends notification requests without sensitive content",
+            "destinationId": "17",
+            "id": "33",
+            "linkedRelationshipId": "32",
+            "sourceId": "4"
+          },
+          {
+            "description": "Exchanges required defence-obligation data",
+            "destinationId": "13",
+            "id": "36",
+            "linkedRelationshipId": "35",
+            "sourceId": "4",
+            "technology": "X-tee (assumed)"
+          },
+          {
+            "description": "Exchanges required defence-service workflow data",
+            "destinationId": "15",
+            "id": "38",
+            "linkedRelationshipId": "37",
+            "sourceId": "4",
+            "technology": "X-tee (assumed)"
+          },
+          {
+            "description": "Requests required health information",
+            "destinationId": "16",
+            "id": "40",
+            "linkedRelationshipId": "39",
+            "sourceId": "4",
+            "technology": "X-tee"
+          }
+        ],
+        "tags": "Element,Software System"
       },
-      "relationships" : [ {
-        "description" : "Uses for user authentication",
-        "destinationId" : "11",
-        "id" : "24",
-        "linkedRelationshipId" : "23",
-        "sourceId" : "4",
-        "technology" : "OIDC"
-      }, {
-        "description" : "Sends notification requests",
-        "destinationId" : "15",
-        "id" : "29",
-        "linkedRelationshipId" : "28",
-        "sourceId" : "4"
-      }, {
-        "description" : "Exchanges required defence-obligation data",
-        "destinationId" : "12",
-        "id" : "32",
-        "linkedRelationshipId" : "31",
-        "sourceId" : "4"
-      }, {
-        "description" : "Exchanges required defence-service workflow data",
-        "destinationId" : "13",
-        "id" : "34",
-        "linkedRelationshipId" : "33",
-        "sourceId" : "4"
-      }, {
-        "description" : "Requests required health information",
-        "destinationId" : "14",
-        "id" : "36",
-        "linkedRelationshipId" : "35",
-        "sourceId" : "4",
-        "technology" : "X-tee"
-      } ],
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "External identity provider operated by RIA and used for strong authentication with supported Estonian eID methods.",
-      "documentation" : { },
-      "id" : "11",
-      "name" : "State Authentication Service (TARA)",
-      "properties" : {
-        "structurizr.dsl.identifier" : "tara"
+      {
+        "description": "External identity provider operated by RIA and used for strong authentication with supported Estonian eID methods.",
+        "documentation": {},
+        "group": "Trust boundary: RIA",
+        "id": "11",
+        "name": "State Authentication Service (TARA)",
+        "properties": {
+          "structurizr.dsl.identifier": "tara"
+        },
+        "tags": "Element,Software System"
       },
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "Authoritative defence-obligation register operated by Kaitseressursside Amet (KRA).",
-      "documentation" : { },
-      "id" : "12",
-      "name" : "Kaitseväekohustuslaste register (KVKR)",
-      "properties" : {
-        "structurizr.dsl.identifier" : "kvkr"
+      {
+        "description": "Authoritative defence-obligation register operated by Kaitseressursside Amet (KRA).",
+        "documentation": {},
+        "group": "Trust boundary: KRA",
+        "id": "13",
+        "name": "Kaitseväekohustuslaste register (KVKR)",
+        "properties": {
+          "structurizr.dsl.identifier": "kvkr"
+        },
+        "tags": "Element,Software System"
       },
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "Authoritative Defence Forces systems providing data and functionality to portal services.",
-      "documentation" : { },
-      "id" : "13",
-      "name" : "Estonian Defence Forces Systems",
-      "properties" : {
-        "structurizr.dsl.identifier" : "defenceForces"
+      {
+        "description": "Authoritative Defence Forces systems providing data and functionality to portal services.",
+        "documentation": {},
+        "group": "Trust boundary: Estonian Defence Forces",
+        "id": "15",
+        "name": "Estonian Defence Forces Systems",
+        "properties": {
+          "structurizr.dsl.identifier": "defenceForces"
+        },
+        "tags": "Element,Software System"
       },
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "Authoritative health information system accessed through TEHIK-managed interfaces.",
-      "documentation" : { },
-      "id" : "14",
-      "name" : "Health Information System (TIS)",
-      "properties" : {
-        "structurizr.dsl.identifier" : "tis"
+      {
+        "description": "Authoritative health information system accessed through TEHIK-managed interfaces.",
+        "documentation": {},
+        "group": "Trust boundary: TEHIK",
+        "id": "16",
+        "name": "Health Information System (TIS)",
+        "properties": {
+          "structurizr.dsl.identifier": "tis"
+        },
+        "tags": "Element,Software System"
       },
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "Trusted external services used to deliver portal notifications.",
-      "documentation" : { },
-      "id" : "15",
-      "name" : "Email/SMS Notification Providers",
-      "properties" : {
-        "structurizr.dsl.identifier" : "notificationProviders"
-      },
-      "tags" : "Element,Software System"
-    } ]
+      {
+        "description": "Trusted external services used to deliver portal notifications.",
+        "documentation": {},
+        "group": "Trust boundary: Third-party providers",
+        "id": "17",
+        "name": "Email/SMS Notification Providers",
+        "properties": {
+          "structurizr.dsl.identifier": "notificationProviders"
+        },
+        "tags": "Element,Software System"
+      }
+    ]
   },
-  "name" : "Citizen Services Portal",
-  "properties" : {
-    "structurizr.inspection.info" : "0",
-    "structurizr.inspection.ignore" : "0",
-    "structurizr.inspection.error" : "25",
-    "structurizr.inspection.warning" : "0",
-    "structurizr.dsl" : "d29ya3NwYWNlICJDaXRpemVuIFNlcnZpY2VzIFBvcnRhbCIgIkM0IGFyY2hpdGVjdHVyZSBtb2RlbCBmb3IgdGhlIENpdGl6ZW4gU2VydmljZXMgUG9ydGFsIiB7CgogICAgIWlkZW50aWZpZXJzIGhpZXJhcmNoaWNhbAoKICAgIG1vZGVsIHsKICAgICAgICBjaXRpemVuID0gcGVyc29uICJDaXRpemVuIC8gUmVzaWRlbnQiICJVc2VzIGRpZ2l0YWwgY2l0aXplbiBzZXJ2aWNlcyB0aHJvdWdoIGEgdW5pZmllZCBwb3J0YWwuIgoKICAgICAgICBhZG1pbmlzdHJhdG9yID0gcGVyc29uICJBZG1pbmlzdHJhdG9yIC8gSGVscGRlc2sgU3RhZmYiICJQcm92aWRlcyBwZXJtaXR0ZWQgc3VwcG9ydCBhbmQgcGVyZm9ybXMgYXV0aG9yaXplZCBhZG1pbmlzdHJhdGl2ZSB0YXNrcy4iCgogICAgICAgIGF1ZGl0b3IgPSBwZXJzb24gIkF1ZGl0b3IgLyBPdmVyc2lnaHQiICJSZXZpZXdzIHBlcm1pdHRlZCBhdWRpdCBhbmQgdHJhbnNwYXJlbmN5IGluZm9ybWF0aW9uLiIKCiAgICAgICAgcG9ydGFsID0gc29mdHdhcmVTeXN0ZW0gIkNpdGl6ZW4gU2VydmljZXMgUG9ydGFsIiAiUHJvdmlkZXMgYSB1bmlmaWVkIGRpZ2l0YWwgZW50cnkgcG9pbnQgZm9yIGludGVyYWN0aW5nIHdpdGggZGlnaXRhbCBzZXJ2aWNlcyBhbmQgcmVnaXN0cmllcy4iIHsKICAgICAgICAgICAgd2ViID0gY29udGFpbmVyICJXZWIgQXBwbGljYXRpb24iICJQcm92aWRlcyB0aGUgdXNlci1mYWNpbmcgaW50ZXJmYWNlIGZvciBjaXRpemVucywgc3VwcG9ydCBzdGFmZiwgYW5kIGF1ZGl0b3JzLiIgewogICAgICAgICAgICAgICAgdGFncyAiV2ViIgogICAgICAgICAgICB9CgogICAgICAgICAgICBiYWNrZW5kID0gY29udGFpbmVyICJCYWNrZW5kIEFwcGxpY2F0aW9uIiAiUHJvdmlkZXMgcG9ydGFsIGJ1c2luZXNzIGxvZ2ljLCBhdXRob3JpemF0aW9uLCB3b3JrZmxvdyBjb29yZGluYXRpb24sIHZhbGlkYXRpb24sIGRvY3VtZW50IG9wZXJhdGlvbnMsIG5vdGlmaWNhdGlvbiBpbml0aWF0aW9uLCBhbmQgdGhlIEFQSSB1c2VkIGJ5IHRoZSBXZWIgQXBwbGljYXRpb24uIgoKICAgICAgICAgICAgaW50ZWdyYXRpb24gPSBjb250YWluZXIgIkludGVncmF0aW9uIFNlcnZpY2UiICJJc29sYXRlcyBleHRlcm5hbC1zeXN0ZW0gaW50ZWdyYXRpb25zIGFuZCBoYW5kbGVzIHN5c3RlbS1zcGVjaWZpYyBjb21tdW5pY2F0aW9uLCBkYXRhIG1hcHBpbmcsIGFuZCBpbnRlZ3JhdGlvbiBmYWlsdXJlcy4iIAoKICAgICAgICAgICAgZGIgPSBjb250YWluZXIgIlBvcnRhbCBEYXRhYmFzZSIgIlN0b3JlcyBwb3J0YWwtb3duZWQgYXBwbGljYXRpb24gZGF0YSBzdWNoIGFzIHByZWZlcmVuY2VzLCB3b3JrZmxvdyBjb29yZGluYXRpb24gc3RhdGUsIG5vdGlmaWNhdGlvbiBtZXRhZGF0YSwgYW5kIGNvbmZpZ3VyYXRpb24uIiB7CiAgICAgICAgICAgICAgICB0YWdzICJEYXRhYmFzZSIKICAgICAgICAgICAgfQoKICAgICAgICAgICAgZG9jdW1lbnRzID0gY29udGFpbmVyICJEb2N1bWVudCBTdG9yZSIgIlN0b3JlcyBkb2N1bWVudHMgcmV0YWluZWQgb3IgdGVtcG9yYXJpbHkgcHJvY2Vzc2VkIGJ5IHRoZSBwb3J0YWwuIiB7CiAgICAgICAgICAgICAgICB0YWdzICJTdG9yZSIKICAgICAgICAgICAgfQoKICAgICAgICAgICAgYXVkaXQgPSBjb250YWluZXIgIkF1ZGl0IFN0b3JlIiAiU3RvcmVzIHNlY3VyaXR5LXJlbGV2YW50IHBvcnRhbCBhdWRpdCBldmVudHMgd2l0aCByZXN0cmljdGVkIGFjY2VzcyBhbmQgaW50ZWdyaXR5IHJlcXVpcmVtZW50cy4iIHsKICAgICAgICAgICAgICAgIHRhZ3MgIlN0b3JlIgogICAgICAgICAgICB9CiAgICAgICAgICAgIAogICAgICAgIH0KCgoKCiAgICAgICAgdGFyYSA9IHNvZnR3YXJlU3lzdGVtICJTdGF0ZSBBdXRoZW50aWNhdGlvbiBTZXJ2aWNlIChUQVJBKSIgIkV4dGVybmFsIGlkZW50aXR5IHByb3ZpZGVyIG9wZXJhdGVkIGJ5IFJJQSBhbmQgdXNlZCBmb3Igc3Ryb25nIGF1dGhlbnRpY2F0aW9uIHdpdGggc3VwcG9ydGVkIEVzdG9uaWFuIGVJRCBtZXRob2RzLiIKCiAgICAgICAga3ZrciA9IHNvZnR3YXJlU3lzdGVtICJLYWl0c2V2w6Rla29odXN0dXNsYXN0ZSByZWdpc3RlciAoS1ZLUikiICJBdXRob3JpdGF0aXZlIGRlZmVuY2Utb2JsaWdhdGlvbiByZWdpc3RlciBvcGVyYXRlZCBieSBLYWl0c2VyZXNzdXJzc2lkZSBBbWV0IChLUkEpLiIKCiAgICAgICAgZGVmZW5jZUZvcmNlcyA9IHNvZnR3YXJlU3lzdGVtICJFc3RvbmlhbiBEZWZlbmNlIEZvcmNlcyBTeXN0ZW1zIiAiQXV0aG9yaXRhdGl2ZSBEZWZlbmNlIEZvcmNlcyBzeXN0ZW1zIHByb3ZpZGluZyBkYXRhIGFuZCBmdW5jdGlvbmFsaXR5IHRvIHBvcnRhbCBzZXJ2aWNlcy4iCgogICAgICAgIHRpcyA9IHNvZnR3YXJlU3lzdGVtICJIZWFsdGggSW5mb3JtYXRpb24gU3lzdGVtIChUSVMpIiAiQXV0aG9yaXRhdGl2ZSBoZWFsdGggaW5mb3JtYXRpb24gc3lzdGVtIGFjY2Vzc2VkIHRocm91Z2ggVEVISUstbWFuYWdlZCBpbnRlcmZhY2VzLiIKCiAgICAgICAgbm90aWZpY2F0aW9uUHJvdmlkZXJzID0gc29mdHdhcmVTeXN0ZW0gIkVtYWlsL1NNUyBOb3RpZmljYXRpb24gUHJvdmlkZXJzIiAiVHJ1c3RlZCBleHRlcm5hbCBzZXJ2aWNlcyB1c2VkIHRvIGRlbGl2ZXIgcG9ydGFsIG5vdGlmaWNhdGlvbnMuIgoKICAgICAgICBjaXRpemVuIC0+IHBvcnRhbC53ZWIgIlVzZXMgdG8gYWNjZXNzIGNpdGl6ZW4gc2VydmljZXMiCiAgICAgICAgYWRtaW5pc3RyYXRvciAtPiBwb3J0YWwud2ViICJVc2VzIGZvciBwZXJtaXR0ZWQgc3VwcG9ydCBhbmQgYWRtaW5pc3RyYXRpb24iCiAgICAgICAgYXVkaXRvciAtPiBwb3J0YWwud2ViICJVc2VzIHRvIHJldmlldyBwZXJtaXR0ZWQgYXVkaXQgYW5kIHRyYW5zcGFyZW5jeSBpbmZvcm1hdGlvbiIKCiAgICAgICAgcG9ydGFsLndlYiAtPiBwb3J0YWwuYmFja2VuZCAiUmVxdWVzdHMgcG9ydGFsIGRhdGEgYW5kIG9wZXJhdGlvbnMgZnJvbSIKCiAgICAgICAgcG9ydGFsLmJhY2tlbmQgLT4gdGFyYSAiVXNlcyBmb3IgdXNlciBhdXRoZW50aWNhdGlvbiIgIk9JREMiCgogICAgICAgIHBvcnRhbC5iYWNrZW5kIC0+IHBvcnRhbC5kYiAiUmVhZHMgZnJvbSBhbmQgd3JpdGVzIHBvcnRhbC1vd25lZCBhcHAgZGF0YSIKICAgICAgICBwb3J0YWwuYmFja2VuZCAtPiBwb3J0YWwuZG9jdW1lbnRzICJTdG9yZXMgYW5kIHJldHJpZXZlcyBkb2N1bWVudHMiCiAgICAgICAgcG9ydGFsLmJhY2tlbmQgLT4gcG9ydGFsLmF1ZGl0ICJXcml0ZXMgYXVkaXQgZXZlbnRzIGFuZCByZWFkcyBwZXJtaXR0ZWQgYXVkaXQgaW5mb3JtYXRpb24iCiAgICAgICAgcG9ydGFsLmJhY2tlbmQgLT4gbm90aWZpY2F0aW9uUHJvdmlkZXJzICJTZW5kcyBub3RpZmljYXRpb24gcmVxdWVzdHMiCgogICAgICAgIHBvcnRhbC5iYWNrZW5kIC0+IHBvcnRhbC5pbnRlZ3JhdGlvbiAiUmVxdWVzdHMgZXh0ZXJuYWwgZGF0YSBhbmQgb3BlcmF0aW9ucyB2aWEiCgogICAgICAgIHBvcnRhbC5pbnRlZ3JhdGlvbiAtPiBrdmtyICJFeGNoYW5nZXMgcmVxdWlyZWQgZGVmZW5jZS1vYmxpZ2F0aW9uIGRhdGEiCiAgICAgICAgcG9ydGFsLmludGVncmF0aW9uIC0+IGRlZmVuY2VGb3JjZXMgIkV4Y2hhbmdlcyByZXF1aXJlZCBkZWZlbmNlLXNlcnZpY2Ugd29ya2Zsb3cgZGF0YSIKICAgICAgICBwb3J0YWwuaW50ZWdyYXRpb24gLT4gdGlzICJSZXF1ZXN0cyByZXF1aXJlZCBoZWFsdGggaW5mb3JtYXRpb24iICJYLXRlZSIKICAgIH0KCiAgICB2aWV3cyB7CiAgICAgICAgc3lzdGVtQ29udGV4dCBwb3J0YWwgIkM0Q29udGV4dCIgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICB9CgogICAgICAgIGNvbnRhaW5lciBwb3J0YWwgIkM0Q29udGFpbmVyIiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgIH0KCiAgICAgICAgc3R5bGVzIHsKICAgICAgICAgICAgZWxlbWVudCAiRWxlbWVudCIgewogICAgICAgICAgICAgICAgY29sb3IgIzlhMjhmOAogICAgICAgICAgICAgICAgc3Ryb2tlICM5YTI4ZjgKICAgICAgICAgICAgICAgIHN0cm9rZVdpZHRoIDcKICAgICAgICAgICAgICAgIHNoYXBlIHJvdW5kZWRib3gKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJQZXJzb24iIHsKICAgICAgICAgICAgICAgIHNoYXBlIHBlcnNvbgogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIkRhdGFiYXNlIiB7CiAgICAgICAgICAgICAgICBzaGFwZSBjeWxpbmRlcgogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIkJvdW5kYXJ5IiB7CiAgICAgICAgICAgICAgICBzdHJva2VXaWR0aCA1CiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiV2ViIiB7CiAgICAgICAgICAgICAgICBzaGFwZSB3ZWJicm93c2VyCiAgICAgICAgICAgIH0gIAogICAgICAgICAgICBlbGVtZW50ICJTdG9yZSIgewogICAgICAgICAgICAgICAgc2hhcGUgY3lsaW5kZXIKICAgICAgICAgICAgfSAgIAogICAgICAgICAgICByZWxhdGlvbnNoaXAgIlJlbGF0aW9uc2hpcCIgewogICAgICAgICAgICAgICAgdGhpY2tuZXNzIDQKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIH0KCiAgICBjb25maWd1cmF0aW9uIHsKICAgICAgICBzY29wZSBzb2Z0d2FyZXN5c3RlbQogICAgfQoKfQ=="
+  "name": "Citizen Services Portal",
+  "properties": {
+    "structurizr.inspection.error": "17",
+    "structurizr.dsl": "d29ya3NwYWNlICJDaXRpemVuIFNlcnZpY2VzIFBvcnRhbCIgIkM0IGFyY2hpdGVjdHVyZSBtb2RlbCBmb3IgdGhlIENpdGl6ZW4gU2VydmljZXMgUG9ydGFsIiB7CgogICAgIWlkZW50aWZpZXJzIGhpZXJhcmNoaWNhbAoKICAgIG1vZGVsIHsKICAgICAgICBncm91cCAiVHJ1c3QgYm91bmRhcnk6IFB1YmxpYyBpbnRlcm5ldCAodW50cnVzdGVkKSIgewogICAgICAgICAgICBjaXRpemVuID0gcGVyc29uICJDaXRpemVuIC8gUmVzaWRlbnQiICJVc2VzIGRpZ2l0YWwgY2l0aXplbiBzZXJ2aWNlcyB0aHJvdWdoIGEgdW5pZmllZCBwb3J0YWwuIgogICAgICAgIH0KCiAgICAgICAgZ3JvdXAgIlRydXN0IGJvdW5kYXJ5OiBTdGFmZiBhbmQgb3ZlcnNpZ2h0IChwcml2aWxlZ2VkKSIgewogICAgICAgICAgICBhZG1pbmlzdHJhdG9yID0gcGVyc29uICJBZG1pbmlzdHJhdG9yIC8gSGVscGRlc2sgU3RhZmYiICJQcm92aWRlcyBwZXJtaXR0ZWQgc3VwcG9ydCBhbmQgcGVyZm9ybXMgYXV0aG9yaXplZCBhZG1pbmlzdHJhdGl2ZSB0YXNrcy4iCgogICAgICAgICAgICBhdWRpdG9yID0gcGVyc29uICJBdWRpdG9yIC8gT3ZlcnNpZ2h0IiAiUmV2aWV3cyBwZXJtaXR0ZWQgYXVkaXQgYW5kIHRyYW5zcGFyZW5jeSBpbmZvcm1hdGlvbi4iCiAgICAgICAgfQoKICAgICAgICBwb3J0YWwgPSBzb2Z0d2FyZVN5c3RlbSAiQ2l0aXplbiBTZXJ2aWNlcyBQb3J0YWwiICJQcm92aWRlcyBhIHVuaWZpZWQgZGlnaXRhbCBlbnRyeSBwb2ludCBmb3IgaW50ZXJhY3Rpbmcgd2l0aCBkaWdpdGFsIHNlcnZpY2VzIGFuZCByZWdpc3RyaWVzLiIgewogICAgICAgICAgICBncm91cCAiUHVibGljLWZhY2luZyB6b25lIiB7CiAgICAgICAgICAgICAgICB3ZWIgPSBjb250YWluZXIgIldlYiBBcHBsaWNhdGlvbiIgIlByb3ZpZGVzIHRoZSB1c2VyLWZhY2luZyBpbnRlcmZhY2UgZm9yIGNpdGl6ZW5zLCBzdXBwb3J0IHN0YWZmLCBhbmQgYXVkaXRvcnMuIEhvbGRzIG5vIGF1dGhvcml0YXRpdmUgZGF0YS4iIHsKICAgICAgICAgICAgICAgICAgICB0YWdzICJXZWIiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KCiAgICAgICAgICAgIGdyb3VwICJJbnRlcm5hbCBhcHBsaWNhdGlvbiB6b25lIiB7CiAgICAgICAgICAgICAgICBiYWNrZW5kID0gY29udGFpbmVyICJCYWNrZW5kIEFwcGxpY2F0aW9uIiAiUHJvdmlkZXMgcG9ydGFsIGJ1c2luZXNzIGxvZ2ljLCBhdXRoZW50aWNhdGlvbiBoYW5kbGluZywgYXV0aG9yaXphdGlvbiwgd29ya2Zsb3cgY29vcmRpbmF0aW9uLCB2YWxpZGF0aW9uLCBkb2N1bWVudCBoYW5kbGluZyAobWFsd2FyZSBzY2FubmluZywgc2lnbmluZyBjb29yZGluYXRpb24pLCBub3RpZmljYXRpb24gaW5pdGlhdGlvbiwgYXVkaXQgZXZlbnQgY3JlYXRpb24sIGFuZCB0aGUgQVBJIHVzZWQgYnkgdGhlIFdlYiBBcHBsaWNhdGlvbi4iCgogICAgICAgICAgICAgICAgaW50ZWdyYXRpb24gPSBjb250YWluZXIgIkludGVncmF0aW9uIFNlcnZpY2UiICJJc29sYXRlcyBleHRlcm5hbC1zeXN0ZW0gaW50ZWdyYXRpb25zIGFuZCBoYW5kbGVzIHN5c3RlbS1zcGVjaWZpYyBjb21tdW5pY2F0aW9uLCBkYXRhIG1hcHBpbmcsIGFuZCBpbnRlZ3JhdGlvbiBmYWlsdXJlcy4gSGFzIG5vIGFjY2VzcyB0byBwb3J0YWwgZGF0YSBzdG9yZXMuIgogICAgICAgICAgICB9CgogICAgICAgICAgICBncm91cCAiUmVzdHJpY3RlZCBkYXRhIHpvbmUiIHsKICAgICAgICAgICAgICAgIGRiID0gY29udGFpbmVyICJQb3J0YWwgRGF0YWJhc2UiICJTdG9yZXMgcG9ydGFsLW93bmVkIGFwcGxpY2F0aW9uIGRhdGEgc3VjaCBhcyBwcmVmZXJlbmNlcywgd29ya2Zsb3cgY29vcmRpbmF0aW9uIHN0YXRlLCBub3RpZmljYXRpb24gbWV0YWRhdGEsIGFuZCBjb25maWd1cmF0aW9uLiIgewogICAgICAgICAgICAgICAgICAgIHRhZ3MgIkRhdGFiYXNlIgogICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgIGRvY3VtZW50cyA9IGNvbnRhaW5lciAiRG9jdW1lbnQgU3RvcmUiICJTdG9yZXMgdXBsb2FkZWQgZG9jdW1lbnRzIHVudGlsIGNvbmZpcm1lZCBkZWxpdmVyeSB0byB0aGUgcmVzcG9uc2libGUgb3JnYW5pemF0aW9uIG9yIHJldGVudGlvbiBleHBpcnkuIiB7CiAgICAgICAgICAgICAgICAgICAgdGFncyAiU3RvcmUiCiAgICAgICAgICAgICAgICB9CgogICAgICAgICAgICAgICAgYXVkaXQgPSBjb250YWluZXIgIkF1ZGl0IFN0b3JlIiAiU3RvcmVzIHNlY3VyaXR5LXJlbGV2YW50IHBvcnRhbCBhdWRpdCBldmVudHMgYXBwZW5kLW9ubHksIHdpdGggcmVzdHJpY3RlZCBhY2Nlc3MgYW5kIGludGVncml0eSByZXF1aXJlbWVudHMuIiB7CiAgICAgICAgICAgICAgICAgICAgdGFncyAiU3RvcmUiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9CgogICAgICAgIGdyb3VwICJUcnVzdCBib3VuZGFyeTogUklBIiB7CiAgICAgICAgICAgIHRhcmEgPSBzb2Z0d2FyZVN5c3RlbSAiU3RhdGUgQXV0aGVudGljYXRpb24gU2VydmljZSAoVEFSQSkiICJFeHRlcm5hbCBpZGVudGl0eSBwcm92aWRlciBvcGVyYXRlZCBieSBSSUEgYW5kIHVzZWQgZm9yIHN0cm9uZyBhdXRoZW50aWNhdGlvbiB3aXRoIHN1cHBvcnRlZCBFc3RvbmlhbiBlSUQgbWV0aG9kcy4iCiAgICAgICAgfQoKICAgICAgICBncm91cCAiVHJ1c3QgYm91bmRhcnk6IEtSQSIgewogICAgICAgICAgICBrcmFTdGFmZiA9IHBlcnNvbiAiS1JBIFN0YWZmIiAiS2FpdHNlcmVzc3Vyc3NpZGUgQW1ldCBzdGFmZiB3aG8gcHJvY2VzcyBkZWZlbmNlLW9ibGlnYXRpb24gcmVxdWVzdHMgYW5kIGlzc3VlIHN1bW1vbnNlcyBhbmQgZGVjaXNpb25zLiIKCiAgICAgICAgICAgIGt2a3IgPSBzb2Z0d2FyZVN5c3RlbSAiS2FpdHNldsOkZWtvaHVzdHVzbGFzdGUgcmVnaXN0ZXIgKEtWS1IpIiAiQXV0aG9yaXRhdGl2ZSBkZWZlbmNlLW9ibGlnYXRpb24gcmVnaXN0ZXIgb3BlcmF0ZWQgYnkgS2FpdHNlcmVzc3Vyc3NpZGUgQW1ldCAoS1JBKS4iCiAgICAgICAgfQoKICAgICAgICBncm91cCAiVHJ1c3QgYm91bmRhcnk6IEVzdG9uaWFuIERlZmVuY2UgRm9yY2VzIiB7CiAgICAgICAgICAgIGVkZlN0YWZmID0gcGVyc29uICJEZWZlbmNlIEZvcmNlcyBTdGFmZiIgIkVzdG9uaWFuIERlZmVuY2UgRm9yY2VzIHN0YWZmIHdobyBwcm9jZXNzIGRlZmVuY2Utc2VydmljZSByZXF1ZXN0cyBhbmQgZGVjaXNpb25zLiIKCiAgICAgICAgICAgIGRlZmVuY2VGb3JjZXMgPSBzb2Z0d2FyZVN5c3RlbSAiRXN0b25pYW4gRGVmZW5jZSBGb3JjZXMgU3lzdGVtcyIgIkF1dGhvcml0YXRpdmUgRGVmZW5jZSBGb3JjZXMgc3lzdGVtcyBwcm92aWRpbmcgZGF0YSBhbmQgZnVuY3Rpb25hbGl0eSB0byBwb3J0YWwgc2VydmljZXMuIgogICAgICAgIH0KCiAgICAgICAgZ3JvdXAgIlRydXN0IGJvdW5kYXJ5OiBURUhJSyIgewogICAgICAgICAgICB0aXMgPSBzb2Z0d2FyZVN5c3RlbSAiSGVhbHRoIEluZm9ybWF0aW9uIFN5c3RlbSAoVElTKSIgIkF1dGhvcml0YXRpdmUgaGVhbHRoIGluZm9ybWF0aW9uIHN5c3RlbSBhY2Nlc3NlZCB0aHJvdWdoIFRFSElLLW1hbmFnZWQgaW50ZXJmYWNlcy4iCiAgICAgICAgfQoKICAgICAgICBncm91cCAiVHJ1c3QgYm91bmRhcnk6IFRoaXJkLXBhcnR5IHByb3ZpZGVycyIgewogICAgICAgICAgICBub3RpZmljYXRpb25Qcm92aWRlcnMgPSBzb2Z0d2FyZVN5c3RlbSAiRW1haWwvU01TIE5vdGlmaWNhdGlvbiBQcm92aWRlcnMiICJUcnVzdGVkIGV4dGVybmFsIHNlcnZpY2VzIHVzZWQgdG8gZGVsaXZlciBwb3J0YWwgbm90aWZpY2F0aW9ucy4iCiAgICAgICAgfQoKICAgICAgICBjaXRpemVuIC0+IHBvcnRhbC53ZWIgIlVzZXMgdG8gYWNjZXNzIGNpdGl6ZW4gc2VydmljZXMiICJIVFRQUyIKICAgICAgICBhZG1pbmlzdHJhdG9yIC0+IHBvcnRhbC53ZWIgIlVzZXMgZm9yIHBlcm1pdHRlZCBzdXBwb3J0IGFuZCBhZG1pbmlzdHJhdGlvbiIgIkhUVFBTIgogICAgICAgIGF1ZGl0b3IgLT4gcG9ydGFsLndlYiAiVXNlcyB0byByZXZpZXcgcGVybWl0dGVkIGF1ZGl0IGFuZCB0cmFuc3BhcmVuY3kgaW5mb3JtYXRpb24iICJIVFRQUyIKCiAgICAgICAga3JhU3RhZmYgLT4ga3ZrciAiUHJvY2Vzc2VzIGZvcndhcmRlZCByZXF1ZXN0cyBhbmQgaXNzdWVzIHN1bW1vbnNlcyBhbmQgZGVjaXNpb25zIGluIgogICAgICAgIGVkZlN0YWZmIC0+IGRlZmVuY2VGb3JjZXMgIlByb2Nlc3NlcyBkZWZlbmNlLXNlcnZpY2UgcmVxdWVzdHMgYW5kIGRlY2lzaW9ucyBpbiIKCiAgICAgICAgcG9ydGFsLndlYiAtPiBwb3J0YWwuYmFja2VuZCAiUmVxdWVzdHMgcG9ydGFsIGRhdGEgYW5kIG9wZXJhdGlvbnMgZnJvbSIKCiAgICAgICAgcG9ydGFsLmJhY2tlbmQgLT4gdGFyYSAiVXNlcyBmb3IgdXNlciBhdXRoZW50aWNhdGlvbiIgIk9JREMiCgogICAgICAgIHBvcnRhbC5iYWNrZW5kIC0+IHBvcnRhbC5kYiAiUmVhZHMgZnJvbSBhbmQgd3JpdGVzIHBvcnRhbC1vd25lZCBhcHAgZGF0YSIKICAgICAgICBwb3J0YWwuYmFja2VuZCAtPiBwb3J0YWwuZG9jdW1lbnRzICJTdG9yZXMgYW5kIHJldHJpZXZlcyBkb2N1bWVudHMiCiAgICAgICAgcG9ydGFsLmJhY2tlbmQgLT4gcG9ydGFsLmF1ZGl0ICJBcHBlbmRzIGF1ZGl0IGV2ZW50cyBhbmQgcmVhZHMgcGVybWl0dGVkIGF1ZGl0IGluZm9ybWF0aW9uIgogICAgICAgIHBvcnRhbC5iYWNrZW5kIC0+IG5vdGlmaWNhdGlvblByb3ZpZGVycyAiU2VuZHMgbm90aWZpY2F0aW9uIHJlcXVlc3RzIHdpdGhvdXQgc2Vuc2l0aXZlIGNvbnRlbnQiCgogICAgICAgIHBvcnRhbC5iYWNrZW5kIC0+IHBvcnRhbC5pbnRlZ3JhdGlvbiAiUmVxdWVzdHMgZXh0ZXJuYWwgZGF0YSBhbmQgb3BlcmF0aW9ucyB2aWEiCgogICAgICAgIHBvcnRhbC5pbnRlZ3JhdGlvbiAtPiBrdmtyICJFeGNoYW5nZXMgcmVxdWlyZWQgZGVmZW5jZS1vYmxpZ2F0aW9uIGRhdGEiICJYLXRlZSAoYXNzdW1lZCkiCiAgICAgICAgcG9ydGFsLmludGVncmF0aW9uIC0+IGRlZmVuY2VGb3JjZXMgIkV4Y2hhbmdlcyByZXF1aXJlZCBkZWZlbmNlLXNlcnZpY2Ugd29ya2Zsb3cgZGF0YSIgIlgtdGVlIChhc3N1bWVkKSIKICAgICAgICBwb3J0YWwuaW50ZWdyYXRpb24gLT4gdGlzICJSZXF1ZXN0cyByZXF1aXJlZCBoZWFsdGggaW5mb3JtYXRpb24iICJYLXRlZSIKICAgIH0KCiAgICB2aWV3cyB7CiAgICAgICAgc3lzdGVtQ29udGV4dCBwb3J0YWwgIkM0Q29udGV4dCIgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgaW5jbHVkZSBrcmFTdGFmZiBlZGZTdGFmZgogICAgICAgIH0KCiAgICAgICAgY29udGFpbmVyIHBvcnRhbCAiQzRDb250YWluZXIiIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgfQoKICAgICAgICBzdHlsZXMgewogICAgICAgICAgICBlbGVtZW50ICJFbGVtZW50IiB7CiAgICAgICAgICAgICAgICBjb2xvciAjOWEyOGY4CiAgICAgICAgICAgICAgICBzdHJva2UgIzlhMjhmOAogICAgICAgICAgICAgICAgc3Ryb2tlV2lkdGggNwogICAgICAgICAgICAgICAgc2hhcGUgcm91bmRlZGJveAogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIlBlcnNvbiIgewogICAgICAgICAgICAgICAgc2hhcGUgcGVyc29uCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiRGF0YWJhc2UiIHsKICAgICAgICAgICAgICAgIHNoYXBlIGN5bGluZGVyCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiQm91bmRhcnkiIHsKICAgICAgICAgICAgICAgIHN0cm9rZVdpZHRoIDUKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJHcm91cCIgewogICAgICAgICAgICAgICAgY29sb3IgI2MwMzkyYgogICAgICAgICAgICAgICAgc3Ryb2tlICNjMDM5MmIKICAgICAgICAgICAgICAgIHN0cm9rZVdpZHRoIDMKICAgICAgICAgICAgICAgIGZvbnRTaXplIDIyCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiV2ViIiB7CiAgICAgICAgICAgICAgICBzaGFwZSB3ZWJicm93c2VyCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiU3RvcmUiIHsKICAgICAgICAgICAgICAgIHNoYXBlIGN5bGluZGVyCiAgICAgICAgICAgIH0KICAgICAgICAgICAgcmVsYXRpb25zaGlwICJSZWxhdGlvbnNoaXAiIHsKICAgICAgICAgICAgICAgIHRoaWNrbmVzcyA0CiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICB9CgogICAgY29uZmlndXJhdGlvbiB7CiAgICAgICAgc2NvcGUgc29mdHdhcmVzeXN0ZW0KICAgIH0KCn0=",
+    "structurizr.inspection.info": "0",
+    "structurizr.inspection.ignore": "0",
+    "structurizr.inspection.warning": "0"
   },
-  "views" : {
-    "configuration" : {
-      "lastSavedView" : "C4Context",
-      "metadataSymbols" : "SquareBrackets",
-      "styles" : {
-        "elements" : [ {
-          "strokeWidth" : 5,
-          "tag" : "Boundary"
-        }, {
-          "shape" : "Cylinder",
-          "tag" : "Database"
-        }, {
-          "color" : "#9a28f8",
-          "shape" : "RoundedBox",
-          "stroke" : "#9a28f8",
-          "strokeWidth" : 7,
-          "tag" : "Element"
-        }, {
-          "shape" : "Person",
-          "tag" : "Person"
-        }, {
-          "shape" : "Cylinder",
-          "tag" : "Store"
-        }, {
-          "shape" : "WebBrowser",
-          "tag" : "Web"
-        } ],
-        "relationships" : [ {
-          "tag" : "Relationship",
-          "thickness" : 4
-        } ]
+  "views": {
+    "configuration": {
+      "lastSavedView": "C4Context",
+      "styles": {
+        "elements": [
+          {
+            "strokeWidth": 5,
+            "tag": "Boundary"
+          },
+          {
+            "shape": "Cylinder",
+            "tag": "Database"
+          },
+          {
+            "color": "#9a28f8",
+            "shape": "RoundedBox",
+            "stroke": "#9a28f8",
+            "strokeWidth": 7,
+            "tag": "Element"
+          },
+          {
+            "color": "#c0392b",
+            "fontSize": 22,
+            "stroke": "#c0392b",
+            "strokeWidth": 3,
+            "tag": "Group"
+          },
+          {
+            "shape": "Person",
+            "tag": "Person"
+          },
+          {
+            "shape": "Cylinder",
+            "tag": "Store"
+          },
+          {
+            "shape": "WebBrowser",
+            "tag": "Web"
+          }
+        ],
+        "relationships": [
+          {
+            "tag": "Relationship",
+            "thickness": 4
+          }
+        ]
       },
-      "terminology" : { }
+      "terminology": {}
     },
-    "containerViews" : [ {
-      "dimensions" : {
-        "height" : 2350,
-        "width" : 4350
-      },
-      "elements" : [ {
-        "id" : "1",
-        "x" : 100,
-        "y" : 445
-      }, {
-        "id" : "2",
-        "x" : 100,
-        "y" : 1010
-      }, {
-        "id" : "3",
-        "x" : 120,
-        "y" : 1625
-      }, {
-        "id" : "5",
-        "x" : 1029,
-        "y" : 1085
-      }, {
-        "id" : "6",
-        "x" : 2084,
-        "y" : 470
-      }, {
-        "id" : "7",
-        "x" : 2384,
-        "y" : 1335
-      }, {
-        "id" : "8",
-        "x" : 1090,
-        "y" : 605
-      }, {
-        "id" : "9",
-        "x" : 1889,
-        "y" : 1645
-      }, {
-        "id" : "10",
-        "x" : 1319,
-        "y" : 1645
-      }, {
-        "id" : "11",
-        "x" : 3684,
-        "y" : 160
-      }, {
-        "id" : "12",
-        "x" : 3699,
-        "y" : 1090
-      }, {
-        "id" : "13",
-        "x" : 3699,
-        "y" : 1470
-      }, {
-        "id" : "14",
-        "x" : 3699,
-        "y" : 1810
-      }, {
-        "id" : "15",
-        "x" : 3685,
-        "y" : 515
-      } ],
-      "externalSoftwareSystemBoundariesVisible" : false,
-      "key" : "C4Container",
-      "name" : "Container View: Citizen Services Portal",
-      "order" : 2,
-      "relationships" : [ {
-        "id" : "16"
-      }, {
-        "id" : "18"
-      }, {
-        "id" : "20"
-      }, {
-        "id" : "22"
-      }, {
-        "id" : "23"
-      }, {
-        "id" : "25"
-      }, {
-        "id" : "26"
-      }, {
-        "id" : "27"
-      }, {
-        "id" : "28"
-      }, {
-        "id" : "30"
-      }, {
-        "id" : "31"
-      }, {
-        "id" : "33"
-      }, {
-        "id" : "35"
-      } ],
-      "softwareSystemId" : "4"
-    } ],
-    "systemContextViews" : [ {
-      "dimensions" : {
-        "height" : 2100,
-        "width" : 2380
-      },
-      "elements" : [ {
-        "id" : "1",
-        "x" : 85,
-        "y" : 175
-      }, {
-        "id" : "2",
-        "x" : 90,
-        "y" : 815
-      }, {
-        "id" : "3",
-        "x" : 105,
-        "y" : 1415
-      }, {
-        "id" : "4",
-        "x" : 939,
-        "y" : 884
-      }, {
-        "id" : "11",
-        "x" : 1729,
-        "y" : 159
-      }, {
-        "id" : "12",
-        "x" : 1729,
-        "y" : 509
-      }, {
-        "id" : "13",
-        "x" : 1729,
-        "y" : 859
-      }, {
-        "id" : "14",
-        "x" : 1729,
-        "y" : 1209
-      }, {
-        "id" : "15",
-        "x" : 1729,
-        "y" : 1559
-      } ],
-      "enterpriseBoundaryVisible" : true,
-      "key" : "C4Context",
-      "name" : "System Context View: Citizen Services Portal",
-      "order" : 1,
-      "relationships" : [ {
-        "id" : "17",
-        "vertices" : [ {
-          "x" : 710,
-          "y" : 705
-        } ]
-      }, {
-        "id" : "19",
-        "vertices" : [ {
-          "x" : 730,
-          "y" : 1034
-        } ]
-      }, {
-        "id" : "21",
-        "vertices" : [ {
-          "x" : 585,
-          "y" : 1435
-        } ]
-      }, {
-        "id" : "24",
-        "vertices" : [ {
-          "x" : 1164,
-          "y" : 309
-        } ]
-      }, {
-        "id" : "29",
-        "vertices" : [ {
-          "x" : 1164,
-          "y" : 1709
-        } ]
-      }, {
-        "id" : "32",
-        "vertices" : [ {
-          "x" : 1470,
-          "y" : 755
-        } ]
-      }, {
-        "id" : "34",
-        "vertices" : [ {
-          "x" : 1559,
-          "y" : 1009
-        } ]
-      }, {
-        "id" : "36",
-        "vertices" : [ {
-          "x" : 1564,
-          "y" : 1349
-        } ]
-      } ],
-      "softwareSystemId" : "4"
-    } ]
+    "containerViews": [
+      {
+        "dimensions": {
+          "width": 3900,
+          "height": 2500
+        },
+        "elements": [
+          {
+            "id": "1",
+            "x": 100,
+            "y": 450
+          },
+          {
+            "id": "2",
+            "x": 100,
+            "y": 1050
+          },
+          {
+            "id": "3",
+            "x": 100,
+            "y": 1650
+          },
+          {
+            "id": "5",
+            "x": 900,
+            "y": 1000
+          },
+          {
+            "id": "6",
+            "x": 1700,
+            "y": 500
+          },
+          {
+            "id": "7",
+            "x": 2550,
+            "y": 1250
+          },
+          {
+            "id": "8",
+            "x": 1100,
+            "y": 1900
+          },
+          {
+            "id": "9",
+            "x": 2300,
+            "y": 1900
+          },
+          {
+            "id": "10",
+            "x": 1700,
+            "y": 1900
+          },
+          {
+            "id": "11",
+            "x": 3300,
+            "y": 250
+          },
+          {
+            "id": "13",
+            "x": 3300,
+            "y": 1100
+          },
+          {
+            "id": "15",
+            "x": 3300,
+            "y": 1500
+          },
+          {
+            "id": "16",
+            "x": 3300,
+            "y": 1900
+          },
+          {
+            "id": "17",
+            "x": 3300,
+            "y": 650
+          }
+        ],
+        "externalSoftwareSystemBoundariesVisible": false,
+        "key": "C4Container",
+        "name": "Container View: Citizen Services Portal",
+        "order": 2,
+        "relationships": [
+          {
+            "id": "18"
+          },
+          {
+            "id": "20"
+          },
+          {
+            "id": "22"
+          },
+          {
+            "id": "26"
+          },
+          {
+            "id": "27"
+          },
+          {
+            "id": "29"
+          },
+          {
+            "id": "30"
+          },
+          {
+            "id": "31"
+          },
+          {
+            "id": "32"
+          },
+          {
+            "id": "34"
+          },
+          {
+            "id": "35"
+          },
+          {
+            "id": "37"
+          },
+          {
+            "id": "39"
+          }
+        ],
+        "softwareSystemId": "4"
+      }
+    ],
+    "systemContextViews": [
+      {
+        "dimensions": {
+          "width": 2900,
+          "height": 2900
+        },
+        "elements": [
+          {
+            "id": "1",
+            "x": 85,
+            "y": 300
+          },
+          {
+            "id": "2",
+            "x": 90,
+            "y": 1150
+          },
+          {
+            "id": "3",
+            "x": 105,
+            "y": 1750
+          },
+          {
+            "id": "4",
+            "x": 939,
+            "y": 1150
+          },
+          {
+            "id": "11",
+            "x": 1729,
+            "y": 150
+          },
+          {
+            "id": "12",
+            "x": 2330,
+            "y": 650
+          },
+          {
+            "id": "13",
+            "x": 1729,
+            "y": 700
+          },
+          {
+            "id": "14",
+            "x": 2330,
+            "y": 1250
+          },
+          {
+            "id": "15",
+            "x": 1729,
+            "y": 1300
+          },
+          {
+            "id": "16",
+            "x": 1729,
+            "y": 1900
+          },
+          {
+            "id": "17",
+            "x": 1729,
+            "y": 2350
+          }
+        ],
+        "enterpriseBoundaryVisible": true,
+        "key": "C4Context",
+        "name": "System Context View: Citizen Services Portal",
+        "order": 1,
+        "relationships": [
+          {
+            "id": "19"
+          },
+          {
+            "id": "21"
+          },
+          {
+            "id": "23"
+          },
+          {
+            "id": "24"
+          },
+          {
+            "id": "25"
+          },
+          {
+            "id": "28"
+          },
+          {
+            "id": "33"
+          },
+          {
+            "id": "36"
+          },
+          {
+            "id": "38"
+          },
+          {
+            "id": "40"
+          }
+        ],
+        "softwareSystemId": "4"
+      }
+    ]
   }
 }

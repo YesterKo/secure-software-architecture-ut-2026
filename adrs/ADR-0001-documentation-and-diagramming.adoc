@@ -45,7 +45,7 @@ We use a *docs-as-code* approach, with all architecture documentation stored in 
 ** The glossary and the model reinforce each other as the source of stable names.
 * Negative or risks:
 ** PNG exports are produced manually and can become *stale* relative to the DSL, so a reviewer may see a diagram that does not match the model.
-** Structurizr DSL has a learning curve and requires running Structurizr locally (e.g. Structurizr Lite via Docker) or using the online tool to render and export.
+** Structurizr DSL has a learning curve and requires running Structurizr locally (e.g. Structurizr in local mode via Docker) or using the online tool to render and export.
 ** Automatic layout is limited, and *trust boundaries are not a native C4 element*; they must be modelled with groups or styling, which the current diagrams do not show yet.
 ** `workspace.json` layout diffs are noisy and can cause merge conflicts if two members edit the layout at the same time.
 * Follow-up actions:

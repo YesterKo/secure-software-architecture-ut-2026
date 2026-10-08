@@ -1,3 +1,7 @@
+= Security Goals
+:toc:
+:toclevels: 2
+
 == Security goals
 
 [cols="1,4,2,2",options="header"]
@@ -124,13 +128,13 @@
 |R-006 - Partial multi-system workflow failure
 
 |SG-005
-|R-008 - Late audit and privacy requirements
+|R-008 - Late audit and privacy requirements; R-011 - Concentrated privilege of the Backend Application
 
 |SG-006
 |R-002 - TIS integration assumptions; R-003 - KVKR/Estonian Defence Forces interface assumptions; R-007 - External interface changes
 
 |SG-007
-|R-002 - TIS integration assumptions; R-003 - KVKR/Estonian Defence Forces interface assumptions
+|R-002 - TIS integration assumptions; R-003 - KVKR/Estonian Defence Forces interface assumptions; R-011 - Concentrated privilege of the Backend Application
 
 |SG-008
 |R-009 - Incorrect workload assumptions

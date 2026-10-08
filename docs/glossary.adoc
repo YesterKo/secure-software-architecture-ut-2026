@@ -69,10 +69,15 @@ Element names must match the Structurizr model in link:../diagrams/workspace.dsl
 |A role that reviews permitted audit and transparency information, e.g. an internal auditor or a supervisory authority.
 |"inspector".
 
-|Agency staff
-|Person (not yet in the C4 model)
-|KRA or Estonian Defence Forces staff who handle requests and decisions. Referenced in R-001, SG-002, and QAS-002; whether they use the portal or only their own agency systems is an open question.
+|KRA Staff
+|Person
+|Kaitseressursside Amet staff who process defence-obligation requests and issue summonses and decisions in KVKR. Together with Defence Forces Staff referred to as *agency staff* (R-001, SG-002, QAS-002). Whether agency staff use the portal directly is an open question.
 |"case worker", "official".
+
+|Defence Forces Staff
+|Person
+|Estonian Defence Forces staff who process defence-service requests and decisions in the Estonian Defence Forces Systems.
+|"military staff".
 
 |State Authentication Service (TARA)
 |External software system
@@ -193,7 +198,10 @@ Element names must match the Structurizr model in link:../diagrams/workspace.dsl
 |A quality attribute scenario: a testable statement of a quality requirement, with stimulus, source, environment, artifact, response, and response measure. See link:qa_scenarios.adoc[qa_scenarios.adoc].
 
 |Trust boundary
-|A boundary where data or control passes between parties with different levels of trust, e.g. citizen device ↔ portal, or portal ↔ external system. See link:security_goals.adoc[security_goals.adoc].
+|A boundary where data or control passes between parties with different levels of trust, e.g. citizen device ↔ portal, or portal ↔ external system. See link:security_goals.adoc[security_goals.adoc]. In the C4 diagrams, trust boundaries are drawn as groups named "Trust boundary: <organization>".
+
+|Security zone
+|A group of portal containers with the same exposure level, shown in the container view: *Public-facing zone* (Web Application), *Internal application zone* (Backend Application, Integration Service), and *Restricted data zone* (Portal Database, Document Store, Audit Store).
 
 |OIDC
 |OpenID Connect, the authentication protocol used between the Backend Application and TARA.

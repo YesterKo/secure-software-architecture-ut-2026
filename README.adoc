@@ -16,20 +16,30 @@ This repository is the official team workspace for the Secure Software Architect
 
 Default scenario: Citizen Services Portal.
 
-Start from link:docs/scenario.adoc[docs/scenario.adoc]. Keep a short project summary here and link to the main architecture artifacts as they become available.
+Start from link:docs/scenario.adoc[docs/scenario.adoc].
+
+Our variant of the scenario is a single digital entry point for Estonian national-defence services: conscription and call-up, health assessment, and reserve service.
+It integrates with KVKR (KRA), Estonian Defence Forces Systems, and the Health Information System (TIS), and authenticates users through TARA.
 
 == Current status
 
-* Week: 2
-* Main focus this week: get written down stuff commited into git
-* Biggest open question: TODO
-* Biggest technical risk: TODO
+* Week: 4 (Checkpoint 1)
+* Main focus this week: first architecture baseline, covering the architecture document, C4 context and container views, glossary, and the first two ADRs
+* Number-one driver: QA-001 Security & Privacy of health and defence-related personal data
+* Biggest open question: do KVKR, TIS, and Estonian Defence Forces Systems provide machine-to-machine interfaces suitable for the required workflows?
+* Biggest technical risk: R-003 / R-002 - unsuitable or unavailable external-system interfaces (addressed first in iteration Phase 1)
 
 == Important links
 
 * Architecture document: link:docs/architecture.adoc[docs/architecture.adoc]
 * Scenario brief: link:docs/scenario.adoc[docs/scenario.adoc]
 * Architectural drivers: link:docs/drivers.adoc[docs/drivers.adoc]
+* Quality attributes: link:docs/quality_attributes.adoc[docs/quality_attributes.adoc]
+* Quality attribute scenarios: link:docs/qa_scenarios.adoc[docs/qa_scenarios.adoc]
+* Security goals: link:docs/security_goals.adoc[docs/security_goals.adoc]
+* Iteration plan: link:docs/iteration_plan.adoc[docs/iteration_plan.adoc]
+* Ownership sketch: link:docs/ownership_sketch.adoc[docs/ownership_sketch.adoc]
+* Glossary: link:docs/glossary.adoc[docs/glossary.adoc]
 * Team contract: link:docs/team_contract.adoc[docs/team_contract.adoc]
 * Risk register: link:risk/risk_register.adoc[risk/risk_register.adoc]
 * ADR index: link:adrs/README.adoc[adrs/README.adoc]
