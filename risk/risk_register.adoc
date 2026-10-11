@@ -69,6 +69,18 @@
 |Low
 |High
 |Use separate credentials per store with least privilege, and give the Backend Application append-only access to the Audit Store. Evaluate audit integrity protection (e.g. hash chaining) in the Phase 3 audit-event prototype and test that the Backend Application cannot modify or delete existing audit events.
+
+|R-012
+|If a KVKR case reference is linked to the wrong portal request, for example after KRA replaces a reference or after a retried forward, then a citizen may see another person's case status or documents and their own request may appear lost.
+|Low
+|High
+|Change the mapping only from a KVKR response that carries the same Request ID and the same person as the request's owner; otherwise keep the old mapping and alert helpdesk staff. Keep a history of earlier references. In Phase 2, test a reference replacement and a mismatched response against the KVKR mock and check that no request changes owner (see link:../docs/identity_model.adoc[identity model]).
+
+|R-013
+|If the personal identification code (the TARA subject) is used as an identifier in URLs, logs, audit events, or notifications, then personal data is exposed to parties who should not see it, and other people's identifiers become guessable.
+|Medium
+|High
+|Use only the random Citizen ID and Request ID in portal interfaces, logs, and audit events, and send the personal identification code only to KVKR and TIS through the Integration Service. Add an automated check in Phase 2 that scans API paths, logs, audit events, and notification texts from a test run for the personal-identification-code pattern and fails if any is found.
 |===
 
 == Notes

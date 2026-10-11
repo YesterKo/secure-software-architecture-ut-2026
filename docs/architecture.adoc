@@ -34,7 +34,7 @@ The full drivers are maintained in separate documents. This section summarizes t
 * link:quality_attributes.adoc[quality_attributes.adoc] - prioritized quality attributes and trade-offs
 * link:qa_scenarios.adoc[qa_scenarios.adoc] - quality attribute scenarios QAS-001 to QAS-004
 * link:security_goals.adoc[security_goals.adoc] - security goals, trust boundaries, data categories, attacker assumptions
-* link:../risk/risk_register.adoc[risk/risk_register.adoc] - technical risks R-001 to R-011
+* link:../risk/risk_register.adoc[risk/risk_register.adoc] - technical risks R-001 to R-013
 
 === 2.1 Business goals
 
@@ -308,7 +308,7 @@ It crosses every container: Web Application → Backend Application → Portal D
 
 === Identity and access
 
-TARA OIDC flow, session handling, authorization and delegation model - see R-001, R-005, planned ADR-0003.
+The identifiers used for citizens, services, and requests are defined in link:identity_model.adoc[identity_model.adoc] (R-012, R-013). Still open: TARA OIDC flow, session handling, authorization and delegation model - see R-001, R-005, planned ADR-0003.
 
 === Data management
 
@@ -439,5 +439,6 @@ _Not due at Checkpoint 1._ Expected changes include new external interface versi
 
 * ADR index: link:../adrs/README.adoc[adrs/README.adoc]
 * Glossary: link:glossary.adoc[glossary.adoc]
+* Identity model: link:identity_model.adoc[identity_model.adoc]
 * Ownership sketch: link:ownership_sketch.adoc[ownership_sketch.adoc]
 * Iteration plan: link:iteration_plan.adoc[iteration_plan.adoc]

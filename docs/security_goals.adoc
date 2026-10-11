@@ -122,7 +122,7 @@
 |R-001 - Authorization model complexity
 
 |SG-003
-|R-004 - Incorrect data ownership; R-008 - Late privacy requirements
+|R-004 - Incorrect data ownership; R-008 - Late privacy requirements; R-012 - Case reference mapped to the wrong request; R-013 - Personal identification code exposed through identifiers
 
 |SG-004
 |R-006 - Partial multi-system workflow failure

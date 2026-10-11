@@ -21,7 +21,7 @@ a|* Required operations can be exercised through documented interfaces, test env
 |2
 |*Validate identity, authorization, and multi-system workflow behavior*
 |TARA authentication PoC; role/permission matrix and authorization tests; first runnable architecture baseline containing a representative end-to-end workflow.
-|R-001, R-005, R-006
+|R-001, R-005, R-006, R-012, R-013
 a| * Supported authentication flows work against the TARA demo environment.
 * Allowed and denied authorization cases behave as expected.
 * Injected failures and retries do not lose or duplicate accepted requests.
@@ -30,7 +30,7 @@ a| * Supported authentication flows work against the TARA demo environment.
 |3
 |*Validate auditability, privacy, and interface evolution*
 |Audit-event prototype; privacy review; contract and regression tests integrated with the runnable architecture baseline.
-|R-007, R-008
+|R-007, R-008, R-011
 a| * Required security-relevant actions produce the expected audit records without unnecessary sensitive data.
 * A simulated compatible or breaking external-interface change remains isolated to the affected integration.
 * The runnable baseline incorporates the validated audit and integration behavior and remains covered by regression tests.

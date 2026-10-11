@@ -157,6 +157,15 @@ Element names must match the Structurizr model in link:../diagrams/workspace.dsl
 |Accepted request
 |A request the portal has confirmed to the citizen as received. Accepted requests must not be lost or processed twice (QA-007).
 
+|Citizen ID
+|A random identifier the Backend Application gives a citizen at first login. It is linked to the TARA subject in the Portal Database and is the only identifier for the citizen used inside the portal. See link:identity_model.adoc[identity_model.adoc].
+
+|TARA subject
+|The `sub` value TARA returns after authentication: a country prefix plus the personal identification code. An external ID, stored only as a mapping to the Citizen ID.
+
+|KVKR case reference
+|The identifier KVKR assigns to a case when KRA accepts a request. An external ID, stored only as a mapping to the Request ID.
+
 |Request ID
 |A random identifier the Backend Application gives a request when its form is opened. Every retry of the same submission carries the same request ID, so repeating it has no additional effect (idempotent submission). It contains no personal data.
 

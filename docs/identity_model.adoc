@@ -1,0 +1,137 @@
+= Identity Model
+:toc:
+:toclevels: 2
+
+This document starts the identity model for the Citizen Services Portal.
+It covers one person, one internal service, and one object from the workflow described in link:architecture.adoc#_6_key_architectural_mechanisms[architecture.adoc, section 6]: a citizen submits a health-assessment request, which the portal forwards to KRA in KVKR.
+
+The model follows three rules:
+
+. Everything the portal refers to has a *stable internal ID* that the portal creates itself and never changes.
+. IDs created by other organizations are *external IDs*. The portal stores them only as a mapping to its internal ID.
+. Internal IDs are random and carry no personal data. The personal identification code never appears in a URL, a log, an audit event, or a notification.
+
+== Overview
+
+[cols="2,3,3,3",options="header"]
+|===
+| |Person: Citizen / Resident |Internal service: Integration Service |Object: health-assessment request
+
+|Stable internal ID
+|*Citizen ID* - random UUID
+|*Service name* `integration-service`
+|*Request ID* - random UUID
+
+|External ID
+|*TARA subject* - the `sub` claim from TARA: country prefix plus personal identification code, e.g. `EE60001019906`
+|*X-tee subsystem identifier* of the portal, in the form `EE/GOV/<registry code>/<subsystem>`
+|*KVKR case reference* - assigned by KVKR when KRA accepts the request
+
+|Name or label shown to people
+|Full name from the TARA authentication result
+|"Integration Service" in documentation and operations tooling. Citizens and agency staff see the organization name behind the X-tee identifier, not the service name.
+|Request type and submission date, e.g. "Health-assessment request, 9 October 2026", plus the KVKR case reference once it exists
+|===
+
+== Person: Citizen / Resident
+
+[cols="2,5",options="header"]
+|===
+|Question |Answer
+
+|Who creates each ID?
+|The *Citizen ID* is created by the Backend Application at the citizen's first successful login. The *TARA subject* is issued by TARA (RIA) and is based on the personal identification code from the population register. The portal does not create or change it.
+
+|Where is the mapping kept?
+|In the Portal Database, as one record linking Citizen ID to TARA subject. Only the Backend Application can read it (ADR-0002). All other portal data - requests, preferences, audit events - refers to the Citizen ID, not to the TARA subject.
+
+|Which IDs appear in public interfaces?
+|*Neither.* The browser holds only an opaque session cookie. The API used by the Web Application identifies the citizen through the session, never through an ID in the URL or request body. The personal identification code leaves the portal only towards KVKR and TIS, through the Integration Service over X-tee, because those systems identify people by it.
+
+|Name shown
+|Taken from the TARA authentication result at each login and not treated as an identifier. If the name changes, the new name is shown from the next login onward.
+|===
+
+== Internal service: Integration Service
+
+[cols="2,5",options="header"]
+|===
+|Question |Answer
+
+|Who creates each ID?
+|The *service name* `integration-service` is assigned by the portal team in the deployment configuration and matches the stable name in the link:glossary.adoc[glossary]. The *X-tee subsystem identifier* is registered for the portal's operating organization with RIA, which governs X-tee.
+
+|Where is the mapping kept?
+|In the Integration Service's own deployment configuration, together with its X-tee credentials. It is not in the Portal Database, because the Integration Service has no access to portal data stores (ADR-0002, SG-007).
+
+|Which IDs appear in public interfaces?
+|The *X-tee subsystem identifier* appears in every exchange with KVKR, TIS, and Estonian Defence Forces Systems, and therefore in their access logs. The *service name* is used only inside the portal: the Backend Application uses it to authenticate calls to the Integration Service, and audit events use it as the actor for automated actions.
+
+|Label shown
+|Where a citizen is shown who accessed their data (QA-009), they see the portal's organization name, resolved from the X-tee identifier - not an internal service name.
+|===
+
+== Object: health-assessment request
+
+[cols="2,5",options="header"]
+|===
+|Question |Answer
+
+|Who creates each ID?
+|The *Request ID* is created by the Backend Application when the citizen opens the form (link:architecture.adoc#_workflow_and_messaging[Workflow and messaging]). The *KVKR case reference* is created by KVKR when KRA accepts the forwarded request.
+
+|Where is the mapping kept?
+|In the Portal Database, on the request record: Request ID, owning Citizen ID, current KVKR case reference, and the status snapshot. Earlier KVKR case references are kept as history on the same record (see <<Lifecycle change: KRA replaces its case reference>>).
+
+|Which IDs appear in public interfaces?
+|The *Request ID* appears in portal URLs and in the API used by the Web Application, for example `/requests/{requestId}`. It is random and contains no personal data. It is not a secret: every access is checked against the Citizen ID that owns the request (SG-002, SG-003), so knowing an ID does not grant access. The Request ID is also sent to KVKR with the forwarded request, so a lost reply can be checked before retrying. +
+The *KVKR case reference* is shown to the citizen as text, so they can quote it when contacting KRA. It is never used to look up a request in the portal's own URLs or API.
+
+|Label shown
+|Request type and submission date. The Request ID is not shown as a label; the KVKR case reference is shown once KRA has accepted the request.
+|===
+
+== Ownership summary
+
+[cols="2,2,2,2",options="header"]
+|===
+|ID or mapping |Created by |Owned by |Stored in
+
+|Citizen ID |Backend Application |Portal |Portal Database
+|TARA subject |TARA |RIA |Portal Database (as mapping only)
+|Citizen ID ↔ TARA subject |Backend Application |Portal |Portal Database
+|Service name `integration-service` |Portal team |Portal |Deployment configuration
+|X-tee subsystem identifier |Registered with RIA |Portal's operating organization; registry run by RIA |Integration Service configuration
+|Request ID |Backend Application |Portal |Portal Database
+|KVKR case reference |KVKR |KRA |KVKR; Portal Database (as mapping only)
+|Request ID ↔ KVKR case reference |Backend Application |Portal |Portal Database
+|===
+
+== Lifecycle change: KRA replaces its case reference
+
+KRA may replace a case reference, for example when two cases about the same person are merged or when KVKR is migrated.
+
+. On the next status fetch, the Integration Service asks KVKR for the case using the stored reference and the Request ID. KVKR answers with the current reference.
+. Before accepting the new reference, the Backend Application checks that KVKR's answer carries the *same Request ID* and belongs to the *same person* as the request's owning Citizen ID. If either check fails, the mapping is not changed and helpdesk staff are alerted (R-012).
+. The Backend Application stores the new reference as current, moves the old one to the reference history with the time of change, and writes an audit event.
+
+*How existing requests remain linked:* nothing else in the portal changes. The request record, its documents in the Document Store, its notifications, and its audit events all refer to the Request ID, which stays the same. The status page URL still works. A citizen who quotes the old reference to the helpdesk can still be helped, because the old reference is in the history.
+
+=== Other lifecycle changes
+
+* *The citizen's name changes.* The name is only a label. The Citizen ID and the TARA subject stay the same, so all requests remain linked; the new name appears from the next login.
+* *The citizen's portal account is deactivated.* The Citizen ID is kept and marked inactive rather than deleted, so existing requests and audit events still refer to a valid ID. Cases already accepted by KRA continue in KVKR, which is their owner.
+
+== Open points
+
+* *Change of personal identification code.* In rare cases a person receives a new personal identification code, which changes the TARA subject. A login with the new subject would look like a new citizen and their existing requests would not appear. How the portal learns about such a change and re-links the Citizen ID is not designed yet.
+* *Delegated access.* If delegation is permitted for a service, the identity model must record both the acting citizen and the citizen represented (R-001).
+* *Staff identities.* Administrators, helpdesk staff, and auditors also log in through TARA, but their roles need a separate model (planned ADR-0003).
+* *KVKR lookup by Request ID* is assumed and not yet confirmed (R-003).
+
+== Related risks
+
+* R-012 - a KVKR case reference mapped to the wrong request
+* R-013 - the personal identification code exposed through identifiers
+
+See link:../risk/risk_register.adoc[risk/risk_register.adoc].
