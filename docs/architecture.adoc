@@ -300,7 +300,11 @@ _Not due at Checkpoint 1._ Planned: component views of the Backend Application (
 
 == 6. Key architectural mechanisms
 
-_Not due at Checkpoint 1._ Initial direction is given in section 4. Open points for each mechanism:
+Data management and workflow are worked out below for one representative action. The other mechanisms remain placeholders with open points.
+
+*Representative action:* a citizen submits a health-assessment request and then opens its status page.
+The request needs health information from the Health Information System (TIS) and is handled by KRA in KVKR.
+It crosses every container: Web Application → Backend Application → Portal Database and Document Store → Integration Service → TIS and KVKR.
 
 === Identity and access
 
@@ -308,11 +312,86 @@ TARA OIDC flow, session handling, authorization and delegation model - see R-001
 
 === Data management
 
-See link:../adrs/ADR-0002-data-ownership.adoc[ADR-0002]. Caching policy per external system is still open.
+The general ownership rules are in link:../adrs/ADR-0002-data-ownership.adoc[ADR-0002]. For the representative action they mean the following.
+
+==== Data owners
+
+[cols="2,2,3",options="header"]
+|===
+|Key data |Data owner (official version) |Notes
+
+|The health-assessment request and its status *before KRA accepts it*
+|Portal Database
+|Created by the Backend Application with a portal request ID. Status values: Draft, Received, Pending (waiting for an external system), Forwarded.
+
+|The case and its status *after KRA accepts it*
+|KVKR (KRA)
+|KVKR assigns its own case reference. From this point the portal is no longer the owner.
+
+|Health information
+|TIS (TEHIK)
+|Fetched on demand through the Integration Service. Never stored or logged by the portal.
+
+|Supporting document uploaded by the citizen
+|Document Store until delivery to KRA is confirmed; then KVKR
+|Deleted from the Document Store after confirmed delivery or retention expiry.
+|===
+
+==== Copies
+
+* *Status snapshot* in the Portal Database: the KVKR case reference, the last status fetched from KVKR, and the time it was fetched. One row per request, overwritten on every successful fetch. It *can be out of date* and is only shown when KVKR cannot be reached, always labelled "last known status" with its time.
+* There is *no copy of health information* and no cache of TIS responses.
+* There is no search index or other derived copy of requests.
+
+==== Promise to the citizen
+
+Once the portal has shown "Request received", the citizen always finds that request on the status page: within 2 seconds under normal load (QA-005), read from the Portal Database, which is the owner at that moment.
+If TIS or KVKR cannot be reached, the status page shows an explicit "Pending" or "Temporarily unavailable" state within 5 seconds, together with the last known status and its time.
+It never shows an error page, an empty list, or a status presented as current when it is not.
+
+This is the behaviour required by the Week 3 scenario *"TIS unavailable during health-related workflow"* (QAS-001) in link:qa_scenarios.adoc[qa_scenarios.adoc]: an explicit unavailable or pending state within 5 seconds, no accepted request lost or duplicated, and unrelated workflows still usable.
 
 === Workflow and messaging
 
-Synchronous versus asynchronous processing of external steps, and how idempotency is implemented - see R-006.
+The portal *accepts first and forwards afterwards*: the citizen's submission is confirmed as soon as it is safely stored in the portal, and the external steps (TIS, KVKR) run after that. This keeps an accepted request safe when an external system fails (QA-007) and keeps the citizen's response time independent of TIS and KVKR (QA-002).
+
+==== Normal path
+
+. The citizen opens the form. The Backend Application creates a draft request with a random *request ID* in the Portal Database and returns it with the form.
+. The citizen fills in the form, uploads a supporting document, and presses Submit. The Web Application sends the submission with the request ID.
+. The Backend Application checks authorization, validates the input, scans the document, stores it in the Document Store, sets the request to *Received*, and writes an audit event. The citizen sees "Request received" with the request ID.
+. The Backend Application asks the Integration Service to request the required health information from TIS, and then to forward the request and document to KVKR, passing the request ID.
+. KVKR accepts the request and returns its case reference. The Backend Application stores the reference and status snapshot, sets the request to *Forwarded*, and writes an audit event. KVKR is now the data owner.
+. When the citizen opens the status page, the Backend Application fetches the current status from KVKR through the Integration Service, updates the snapshot, and shows the live status.
+
+==== Timeout case: TIS does not answer
+
+. Step 4 starts, but the Integration Service gets no reply from TIS within its timeout.
+. The Integration Service returns "unavailable" to the Backend Application instead of waiting. The Backend Application sets the request to *Pending* and records the reason.
+. *What the citizen sees:* the request stays on the status page as "Received - waiting for the health information system. You do not need to submit again." This appears within 5 seconds. Other workflows, such as viewing defence-obligation data from KVKR, keep working.
+. *How the portal retries safely:* the Backend Application retries step 4 later with the *same request ID*, with increasing delays. Requesting information from TIS changes nothing in TIS, so repeating it is harmless.
+. Forwarding to KVKR is the step that could create a duplicate, if KVKR created the case but its reply was lost. So before repeating a forward, the Integration Service first asks KVKR whether a case with that request ID already exists. If it does, the portal stores the existing case reference instead of forwarding again.
+. If the citizen presses Submit again or reloads the page, the Web Application sends the same request ID, and the Backend Application returns the existing request instead of creating a second one.
+. If retries keep failing beyond an agreed limit, the request stays Pending, helpdesk staff are alerted, and the citizen is notified to log in and check the status.
+
+==== Test
+
+A failure-injection test against mock TIS and KVKR services (iteration Phase 2, R-006):
+
+. Configure the TIS mock to not answer the first two calls, and the KVKR mock to create the case but drop its first reply.
+. Submit one health-assessment request, sending the Submit call twice with the same request ID.
+. Check that:
+** the citizen gets "Request received" and, within 5 seconds, a Pending state on the status page;
+** exactly *one* request exists in the Portal Database and exactly *one* case exists in the KVKR mock after the mocks recover;
+** the request ends as Forwarded with the KVKR case reference stored;
+** no health information appears in the Portal Database, the Audit Store, or the logs;
+** while TIS is failing, a KVKR-only page (defence-obligation data) still loads normally.
+
+==== Open points
+
+* Whether KVKR can look up a case by the portal's request ID is not confirmed (R-003). If it cannot, a different duplicate check is needed.
+* How long the status snapshot is kept after a case closes depends on retention rules not yet agreed with KRA.
+* Retry limits and delays are to be set after the Phase 1 integration PoCs.
 
 === Auditing and logging
 
@@ -341,7 +420,9 @@ _Not due at Checkpoint 1._ Expected changes include new external interface versi
 * *Agency staff access:* do KRA Staff and Defence Forces Staff need portal access, or do they work only in their own systems?
 * *Signing:* which signing service should the Backend Application use (for example RIA's signature gateway, or direct eID signing libraries)? Is signing needed in the first services at all?
 * *Protocols:* are KVKR and Estonian Defence Forces Systems actually reachable through X-tee? The diagrams currently mark this as assumed.
-* *Workflow style:* which external steps must be synchronous, and which can be queued (QAS-001)?
+* *Workflow style:* request submission is accept-first, forward-afterwards (section 6, Workflow and messaging). Which other external steps must be synchronous, and which can be queued (QAS-001)?
+* *Duplicate check at KVKR:* can KVKR look up a case by the portal's request ID, so a lost reply can be checked before retrying (R-003, R-006)?
+* *Snapshot retention:* how long is a status snapshot kept after the case is closed?
 * *Audit of external exchanges:* should the Integration Service write audit events directly, or report them to the Backend Application?
 * *Malware scanning:* is scanning done inside the Backend Application or by a separate scanning service?
 * *Workload:* what are normal and peak load (QAS-004, R-009)?

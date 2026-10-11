@@ -157,6 +157,9 @@ Element names must match the Structurizr model in link:../diagrams/workspace.dsl
 |Accepted request
 |A request the portal has confirmed to the citizen as received. Accepted requests must not be lost or processed twice (QA-007).
 
+|Request ID
+|A random identifier the Backend Application gives a request when its form is opened. Every retry of the same submission carries the same request ID, so repeating it has no additional effect (idempotent submission). It contains no personal data.
+
 |Delegation
 |Authority granted by one citizen to another person to act on their behalf. Delegation rules are service-specific and may prohibit delegation for national-defence services.
 
