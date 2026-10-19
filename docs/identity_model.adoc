@@ -125,7 +125,7 @@ KRA may replace a case reference, for example when two cases about the same pers
 == Open points
 
 * *Change of personal identification code.* In rare cases a person receives a new personal identification code, which changes the TARA subject. A login with the new subject would look like a new citizen and their existing requests would not appear. How the portal learns about such a change and re-links the Citizen ID is not designed yet.
-* *Delegated access.* If delegation is permitted for a service, the identity model must record both the acting citizen and the citizen represented (R-001).
+* *Delegated access.* Delegations are designed in link:architecture.adoc#_identity_and_access[architecture.adoc, Identity and access]. Each delegation has a portal-created delegation ID linking the grantor's and the delegate's Citizen IDs, and audit events record both (R-014).
 * *Staff identities.* Administrators, helpdesk staff, and auditors also log in through TARA, but their roles need a separate model (planned ADR-0003).
 * *KVKR lookup by Request ID* is assumed and not yet confirmed (R-003).
 

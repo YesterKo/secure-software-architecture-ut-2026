@@ -34,7 +34,7 @@ The full drivers are maintained in separate documents. This section summarizes t
 * link:quality_attributes.adoc[quality_attributes.adoc] - prioritized quality attributes and trade-offs
 * link:qa_scenarios.adoc[qa_scenarios.adoc] - quality attribute scenarios QAS-001 to QAS-004
 * link:security_goals.adoc[security_goals.adoc] - security goals, trust boundaries, data categories, attacker assumptions
-* link:../risk/risk_register.adoc[risk/risk_register.adoc] - technical risks R-001 to R-013
+* link:../risk/risk_register.adoc[risk/risk_register.adoc] - technical risks R-001 to R-015
 
 === 2.1 Business goals
 
@@ -308,7 +308,80 @@ It crosses every container: Web Application → Backend Application → Portal D
 
 === Identity and access
 
-The identifiers used for citizens, services, and requests are defined in link:identity_model.adoc[identity_model.adoc] (R-012, R-013). Still open: TARA OIDC flow, session handling, authorization and delegation model - see R-001, R-005, planned ADR-0003.
+This section works through one protected action from the representative workflow: *viewing the status of a health-assessment request*. The citizen can do this directly, or a delegate can do it on the citizen's behalf.
+The identifiers used here are defined in link:identity_model.adoc[identity_model.adoc]. Who may do what is listed in link:access_control_matrix.adoc[access_control_matrix.adoc].
+
+==== Signing in
+
+. The citizen chooses "Log in" in the Web Application and is redirected to TARA.
+. The citizen authenticates with ID-card, Mobile-ID, or Smart-ID. TARA returns an authorization code to the Backend Application, which acts as the OpenID Connect client.
+. The Backend Application exchanges the code for an ID token and validates it: signature, issuer, audience, expiry, and the nonce it sent. It also checks the level of assurance in the `acr` claim and rejects logins below the level required for national-defence services.
+. The Backend Application takes the *TARA subject* (`sub`) and looks up the matching *Citizen ID* in the Portal Database. At the first login it creates a new Citizen ID and stores the mapping (see the identity model).
+. The Backend Application creates a server-side session that holds the Citizen ID, the login time, and the level of assurance. The browser gets only a random session ID in a cookie marked `HttpOnly`, `Secure`, and `SameSite`. The TARA subject is not stored in the session or sent to the browser (R-013).
+
+From here on, every check uses the Citizen ID. The personal identification code is used only when the Integration Service has to identify the person to KVKR or TIS.
+
+==== Who may view a request's status
+
+*Access-control approach:* attribute-based, with roles for staff.
+
+* For citizens and delegates the decision depends on *relationships and attributes*, not on a role: whether the person owns the request, and whether a current delegation from the owner covers this action. Every citizen has the same role, so a role alone cannot tell one citizen's request from another's.
+* *Roles* are used only for staff, such as Helpdesk or Auditor, where the job decides the access. Staff access is outside this workflow and will be covered in ADR-0003.
+
+The decision is made in the *Backend Application*, in one shared authorization check that runs on every request before any data is read. Its inputs are:
+
+* the Citizen ID from the session, and the level of assurance;
+* the Request ID from the URL, and the request's owning Citizen ID, read from the Portal Database;
+* for a delegate, the delegation record from the Portal Database: grantor, delegate, scope, validity period, and whether it has been revoked;
+* the service rules, which say which actions in each service may be delegated at all.
+
+Access is allowed if the Citizen ID in the session *owns the request*, or if a *current delegation* from the owner to that Citizen ID covers "view status" for health-assessment requests.
+
+The Web Application hides actions a person may not take, but that is only a convenience. The Backend Application makes the decision. The Integration Service never makes decisions about citizens. It acts only on calls from the Backend Application, which has already checked access.
+
+==== What a person sees when access is denied
+
+* *Another person's request, or a Request ID that does not exist:* the same message in both cases: "Request not found or you do not have access to it." The page does not reveal whether the request exists or who owns it. The denied attempt is written to the Audit Store within 5 seconds (QAS-002).
+* *A delegate whose delegation has ended or been revoked:* the citizen no longer appears in the delegate's list of people they can act for. If the delegate opens an old link, they get the same "not found or no access" message.
+* *A delegate trying an action that cannot be delegated,* such as reading health information: "This action can only be done by the person themselves."
+
+No denial message includes data from the request.
+
+==== Service-to-service identity
+
+Viewing the live status crosses two service boundaries.
+
+* *Backend Application → Integration Service:* both services identify themselves with mutual TLS, using certificates from the portal's internal certificate authority. The certificates carry the service names `backend-application` and `integration-service`. The Integration Service accepts calls only from the `backend-application` identity. Each call also carries the Request ID and the acting Citizen ID, but only so they can be recorded in the audit trail. The Integration Service does not use them to make access decisions.
+* *Integration Service → KVKR:* the call goes over X-tee. KVKR identifies the caller by the portal's X-tee subsystem identifier and decides on its own side which services that subsystem may use.
+
+==== Delegation
+
+[cols="1,4",options="header"]
+|===
+|Question |Design
+
+|Who grants access
+|The citizen who owns the requests (the *grantor*). They grant it in the portal after signing in through TARA. Delegations are portal-owned data, stored in the Portal Database. Legal representation such as guardianship is not covered yet (open point below).
+
+|What it covers
+|One service and a list of actions. For health-assessment requests, the service rules allow only *"view status"* to be delegated. Health information, supporting documents, and submitting or withdrawing a request are *not* delegable, because the request concerns the citizen's own health and defence obligation. A delegate cannot pass a delegation on to someone else.
+
+|When it ends
+|On the end date the grantor chooses, at most 12 months after granting, or earlier if the grantor revokes it.
+
+|How revocation takes effect
+|The grantor revokes the delegation in the portal. The Backend Application marks the delegation record as revoked in the Portal Database straight away. The delegation is *not* copied into the delegate's session or into any token or cache. It is read from the Portal Database on every request, so the delegate's *next request* is denied, even within an existing session (R-014).
+
+|Whose actions appear in the audit record
+|Both people. Each delegated action creates an audit event with the *delegate's Citizen ID as actor*, the *grantor's Citizen ID as the person represented*, the delegation ID, the action, the Request ID, the time, and the outcome. The grantor can see these events in the transparency view (QA-009).
+|===
+
+==== Open points
+
+* Do the legal rules for national-defence services allow delegation at all? This design assumes that viewing the status is allowed and everything else is not (drivers assumption on service-specific delegation). This needs to be confirmed.
+* How should legal representatives, such as guardians, be handled? Their authority comes from an external register, not from a grant made in the portal.
+* What staff roles are needed, and what can each see (planned ADR-0003, R-001)?
+* What happens if TARA is unavailable? No one can sign in (see Known inconsistencies, section 11).
 
 === Data management
 
@@ -440,5 +513,6 @@ _Not due at Checkpoint 1._ Expected changes include new external interface versi
 * ADR index: link:../adrs/README.adoc[adrs/README.adoc]
 * Glossary: link:glossary.adoc[glossary.adoc]
 * Identity model: link:identity_model.adoc[identity_model.adoc]
+* Access control matrix: link:access_control_matrix.adoc[access_control_matrix.adoc]
 * Ownership sketch: link:ownership_sketch.adoc[ownership_sketch.adoc]
 * Iteration plan: link:iteration_plan.adoc[iteration_plan.adoc]

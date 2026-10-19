@@ -81,6 +81,18 @@
 |Medium
 |High
 |Use only the random Citizen ID and Request ID in portal interfaces, logs, and audit events, and send the personal identification code only to KVKR and TIS through the Integration Service. Add an automated check in Phase 2 that scans API paths, logs, audit events, and notification texts from a test run for the personal-identification-code pattern and fails if any is found.
+
+|R-014
+|If a delegation is copied into the delegate's session, a token, or a cache, then a revoked or expired delegation may keep working until that copy expires, and the delegate can still view the citizen's requests after the citizen has withdrawn consent.
+|Medium
+|High
+|Read the delegation from the Portal Database on every request and never copy it into sessions or tokens. Test: a delegate views the grantor's request status; the grantor revokes the delegation; the delegate repeats the same request in the *same session* and must be denied, with a denied audit event. Repeat with a delegation whose end date has passed (see link:../docs/access_control_matrix.adoc[access control matrix]).
+
+|R-015
+|If an endpoint loads a request by its Request ID without checking the owner or a delegation, then a signed-in citizen can open another citizen's request by changing the Request ID in the URL.
+|Medium
+|High
+|Put the ownership and delegation check in one shared authorization step in the Backend Application that runs before any request data is read, instead of repeating it in each endpoint. Test: for every endpoint that takes a Request ID, sign in as citizen A and call it with citizen B's Request ID. Each call must return the same response as a non-existent ID, return no data, and create a denied audit event. Run this automatically for every new endpoint.
 |===
 
 == Notes

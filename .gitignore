@@ -3,3 +3,6 @@ diagrams/.structurizr/
 
 # macOS
 .DS_Store
+
+# IDE
+.idea/

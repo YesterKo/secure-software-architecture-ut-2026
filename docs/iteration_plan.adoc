@@ -21,7 +21,7 @@ a|* Required operations can be exercised through documented interfaces, test env
 |2
 |*Validate identity, authorization, and multi-system workflow behavior*
 |TARA authentication PoC; role/permission matrix and authorization tests; first runnable architecture baseline containing a representative end-to-end workflow.
-|R-001, R-005, R-006, R-012, R-013
+|R-001, R-005, R-006, R-012, R-013, R-014, R-015
 a| * Supported authentication flows work against the TARA demo environment.
 * Allowed and denied authorization cases behave as expected.
 * Injected failures and retries do not lose or duplicate accepted requests.

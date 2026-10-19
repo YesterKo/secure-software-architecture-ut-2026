@@ -23,8 +23,8 @@ It integrates with KVKR (KRA), Estonian Defence Forces Systems, and the Health I
 
 == Current status
 
-* Week: 6
-* Main focus this week: identity model for the citizen, the Integration Service, and a health-assessment request, plus identity-related risks
+* Week: 7
+* Main focus this week: authentication, authorization, and delegation for viewing a health-assessment request's status
 * Number-one driver: QA-001 Security & Privacy of health and defence-related personal data
 * Biggest open question: do KVKR, TIS, and Estonian Defence Forces Systems provide machine-to-machine interfaces suitable for the required workflows?
 * Biggest technical risk: R-003 / R-002 - unsuitable or unavailable external-system interfaces (addressed first in iteration Phase 1)
@@ -41,6 +41,7 @@ It integrates with KVKR (KRA), Estonian Defence Forces Systems, and the Health I
 * Ownership sketch: link:docs/ownership_sketch.adoc[docs/ownership_sketch.adoc]
 * Glossary: link:docs/glossary.adoc[docs/glossary.adoc]
 * Identity model: link:docs/identity_model.adoc[docs/identity_model.adoc]
+* Access control matrix: link:docs/access_control_matrix.adoc[docs/access_control_matrix.adoc]
 * Team contract: link:docs/team_contract.adoc[docs/team_contract.adoc]
 * Risk register: link:risk/risk_register.adoc[risk/risk_register.adoc]
 * ADR index: link:adrs/README.adoc[adrs/README.adoc]

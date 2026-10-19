@@ -170,7 +170,7 @@ Element names must match the Structurizr model in link:../diagrams/workspace.dsl
 |A random identifier the Backend Application gives a request when its form is opened. Every retry of the same submission carries the same request ID, so repeating it has no additional effect (idempotent submission). It contains no personal data.
 
 |Delegation
-|Authority granted by one citizen to another person to act on their behalf. Delegation rules are service-specific and may prohibit delegation for national-defence services.
+|Authority granted by one citizen (the grantor) to another person (the delegate) to perform listed actions in one service on their behalf, until an end date or revocation. Delegation rules are service-specific and may prohibit delegation for national-defence services. See link:access_control_matrix.adoc[access_control_matrix.adoc].
 
 |Authoritative source
 |The system whose record is the legally and operationally valid version of a piece of data. The portal is not the authoritative source for KVKR, TIS, or Estonian Defence Forces data (ADR-0002).

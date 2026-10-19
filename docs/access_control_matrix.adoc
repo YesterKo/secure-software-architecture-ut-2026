@@ -1,0 +1,81 @@
+= Access Control Matrix
+:toc:
+
+This matrix covers one workflow: *submitting a health-assessment request and viewing its status*, as described in link:architecture.adoc#_identity_and_access[architecture.adoc, Identity and access].
+The approach is attribute-based, with roles for staff. For citizens and delegates, access depends on ownership of the request and on a current delegation. Staff roles are not part of this workflow.
+
+Identifiers follow link:identity_model.adoc[identity_model.adoc]. "Owner" means the Citizen ID stored on the request.
+
+== Matrix
+
+[cols="2,2,2,4,2",options="header"]
+|===
+|Subject |Action |Protected resource |Conditions for access |Checked by
+
+|Citizen
+|Submit
+|Own health-assessment request
+|Signed in through TARA at the required level of assurance; session Citizen ID equals the request owner; the request is still a Draft.
+|Backend Application
+
+|Citizen
+|View status
+|Own health-assessment request
+|Signed in; session Citizen ID equals the request owner.
+|Backend Application
+
+|Citizen
+|Grant or revoke a delegation
+|Own delegations
+|Signed in; session Citizen ID equals the grantor; the service rules allow the action to be delegated; end date at most 12 months away.
+|Backend Application
+
+|Delegate
+|View status
+|Grantor's health-assessment request
+|Signed in; a delegation exists from the request owner to the session Citizen ID, covers "view status" for health-assessment requests, is within its validity period, and is not revoked. Checked against the Portal Database on every request.
+|Backend Application
+
+|Delegate
+|Read health information or supporting documents
+|Grantor's health-assessment request
+|*Denied.* Not delegable under the service rules.
+|Backend Application
+
+|Delegate
+|Submit, withdraw, or re-delegate
+|Grantor's request or delegation
+|*Denied.* Not delegable under the service rules.
+|Backend Application
+
+|Citizen
+|View status
+|Another citizen's request
+|*Denied* when there is no ownership and no current delegation. The response is the same as for a request that does not exist, and the attempt is audited.
+|Backend Application
+
+|Backend Application (service)
+|Forward a request or fetch its status
+|Integration Service API
+|Mutual TLS client certificate with the service name `backend-application`. Any other caller is rejected.
+|Integration Service
+
+|Integration Service (service)
+|Fetch case status
+|KVKR case
+|X-tee call from the portal's subsystem, which KRA has authorized for this KVKR service.
+|KVKR
+|===
+
+== Audit
+
+Every decision in this matrix, whether allowed or denied, creates an audit event in the Audit Store. It records the actor's Citizen ID or service name, the action, the Request ID, the time, and the outcome.
+For delegated actions, the event also records the grantor's Citizen ID and the delegation ID.
+
+== Related risks
+
+* R-001 - authorization model complexity
+* R-014 - revoked or expired delegation still works
+* R-015 - access to another citizen's request through a changed Request ID
+
+See link:../risk/risk_register.adoc[risk/risk_register.adoc].
