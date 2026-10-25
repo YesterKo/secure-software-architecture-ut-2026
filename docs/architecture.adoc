@@ -150,6 +150,7 @@ The diagram shows each organization as a separate trust boundary, matching link:
 * *Staff and oversight* - privileged users. Their actions are least-privilege and audited (SG-010).
 * *RIA, KRA, Estonian Defence Forces, TEHIK, third-party providers* - each external organization is a separate boundary. Exchanges use authenticated channels (SG-006), and compromise of one must not grant access to unrelated data (SG-007).
 
+[#_4_containers]
 == 4. Containers
 
 image::../diagrams/c4-container.png[C4 container diagram of the Citizen Services Portal]
@@ -263,7 +264,7 @@ The full decision and rationale are in link:../adrs/ADR-0002-data-ownership.adoc
 
 |QA-001, SG-001, SG-002, SG-003, QAS-002
 |TARA-based authentication. Authorization is enforced centrally in the Backend Application for every request. The Web Application holds no data. External data is fetched on demand instead of copied (ADR-0002).
-|The authorization and delegation model itself (R-001, planned ADR-0003); TARA behaviour (R-005).
+|The authorization and delegation model itself (R-001, planned ADR-0004); TARA behaviour (R-005).
 
 |QA-002, QA-007, QAS-001
 |The Integration Service isolates each external system and returns explicit unavailable or pending states. Workflow state and idempotency keys are kept in the Portal Database so accepted requests survive external failures.
@@ -326,7 +327,7 @@ From here on, every check uses the Citizen ID. The personal identification code 
 *Access-control approach:* attribute-based, with roles for staff.
 
 * For citizens and delegates the decision depends on *relationships and attributes*, not on a role: whether the person owns the request, and whether a current delegation from the owner covers this action. Every citizen has the same role, so a role alone cannot tell one citizen's request from another's.
-* *Roles* are used only for staff, such as Helpdesk or Auditor, where the job decides the access. Staff access is outside this workflow and will be covered in ADR-0003.
+* *Roles* are used only for staff, such as Helpdesk or Auditor, where the job decides the access. Staff access is outside this workflow and will be covered in ADR-0004.
 
 The decision is made in the *Backend Application*, in one shared authorization check that runs on every request before any data is read. Its inputs are:
 
@@ -380,7 +381,7 @@ Viewing the live status crosses two service boundaries.
 
 * Do the legal rules for national-defence services allow delegation at all? This design assumes that viewing the status is allowed and everything else is not (drivers assumption on service-specific delegation). This needs to be confirmed.
 * How should legal representatives, such as guardians, be handled? Their authority comes from an external register, not from a grant made in the portal.
-* What staff roles are needed, and what can each see (planned ADR-0003, R-001)?
+* What staff roles are needed, and what can each see (planned ADR-0004, R-001)?
 * What happens if TARA is unavailable? No one can sign in (see Known inconsistencies, section 11).
 
 === Data management
@@ -424,6 +425,7 @@ It never shows an error page, an empty list, or a status presented as current wh
 
 This is the behaviour required by the Week 3 scenario *"TIS unavailable during health-related workflow"* (QAS-001) in link:qa_scenarios.adoc[qa_scenarios.adoc]: an explicit unavailable or pending state within 5 seconds, no accepted request lost or duplicated, and unrelated workflows still usable.
 
+[#_workflow_and_messaging]
 === Workflow and messaging
 
 The portal *accepts first and forwards afterwards*: the citizen's submission is confirmed as soon as it is safely stored in the portal, and the external steps (TIS, KVKR) run after that. This keeps an accepted request safe when an external system fails (QA-007) and keeps the citizen's response time independent of TIS and KVKR (QA-002).
@@ -472,7 +474,9 @@ Audit event catalogue, integrity protection, and separation from operational log
 
 == 7. Interfaces
 
-_Not due at Checkpoint 1._ Link to API specifications in link:../api/[api/].
+* Interface inventory: link:interface_inventory.adoc[interface_inventory.adoc] - all key interfaces with producer, consumer, protocol, authentication, and draft versioning.
+* Portal API specification: link:../api/portal-api.yaml[api/portal-api.yaml] (OpenAPI 3.1) - health-assessment requests: create draft, submit, view status, list.
+* Boundaries and conventions: link:../adrs/ADR-0003-interface-boundaries-and-specification.adoc[ADR-0003].
 
 == 8. Security analysis
 
@@ -514,5 +518,6 @@ _Not due at Checkpoint 1._ Expected changes include new external interface versi
 * Glossary: link:glossary.adoc[glossary.adoc]
 * Identity model: link:identity_model.adoc[identity_model.adoc]
 * Access control matrix: link:access_control_matrix.adoc[access_control_matrix.adoc]
+* Interface inventory: link:interface_inventory.adoc[interface_inventory.adoc]
 * Ownership sketch: link:ownership_sketch.adoc[ownership_sketch.adoc]
 * Iteration plan: link:iteration_plan.adoc[iteration_plan.adoc]

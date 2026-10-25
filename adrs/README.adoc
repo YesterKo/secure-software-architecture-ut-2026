@@ -21,8 +21,13 @@ Each ADR should state context, decision, alternatives, consequences, and follow-
 |External systems stay authoritative; the portal stores only portal-owned data, split over Portal Database, Document Store, and Audit Store.
 |Accepted
 |QA-001, QA-002, QA-003, QA-007, QA-010; SG-003, SG-005; R-004, R-011
+
+|link:ADR-0003-interface-boundaries-and-specification.adoc[ADR-0003]
+|Interface boundaries and specification approach: contract-first OpenAPI 3.1, external formats stay in the Integration Service, problem-details errors with stable codes, path-based major versions.
+|Accepted
+|QA-004, QA-007, QA-008; SG-002, SG-003; R-007, R-013, R-015
 |===
 
 == Planned
 
-* ADR-0003: Identity, authorization, and delegation model (R-001, R-005, SG-001, SG-002)
+* ADR-0004: Identity, authorization, and delegation model (R-001, R-005, SG-001, SG-002)

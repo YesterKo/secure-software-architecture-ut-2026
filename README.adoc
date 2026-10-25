@@ -23,8 +23,8 @@ It integrates with KVKR (KRA), Estonian Defence Forces Systems, and the Health I
 
 == Current status
 
-* Week: 7
-* Main focus this week: authentication, authorization, and delegation for viewing a health-assessment request's status
+* Week: 8
+* Main focus this week: API design - interface inventory, Portal API specification, and ADR-0003
 * Number-one driver: QA-001 Security & Privacy of health and defence-related personal data
 * Biggest open question: do KVKR, TIS, and Estonian Defence Forces Systems provide machine-to-machine interfaces suitable for the required workflows?
 * Biggest technical risk: R-003 / R-002 - unsuitable or unavailable external-system interfaces (addressed first in iteration Phase 1)
@@ -42,10 +42,11 @@ It integrates with KVKR (KRA), Estonian Defence Forces Systems, and the Health I
 * Glossary: link:docs/glossary.adoc[docs/glossary.adoc]
 * Identity model: link:docs/identity_model.adoc[docs/identity_model.adoc]
 * Access control matrix: link:docs/access_control_matrix.adoc[docs/access_control_matrix.adoc]
+* Interface inventory: link:docs/interface_inventory.adoc[docs/interface_inventory.adoc]
 * Team contract: link:docs/team_contract.adoc[docs/team_contract.adoc]
 * Risk register: link:risk/risk_register.adoc[risk/risk_register.adoc]
 * ADR index: link:adrs/README.adoc[adrs/README.adoc]
-* API specifications: link:api/[api/]
+* API specifications: link:api/portal-api.yaml[api/portal-api.yaml]
 * Deployment and operations notes: link:ops/[ops/]
 * Diagrams: link:diagrams/[diagrams/]
 

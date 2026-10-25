@@ -1,0 +1,90 @@
+= ADR-0003: Interface boundaries and specification approach
+:toc:
+
+== Status
+
+Accepted (2026-10-25)
+
+== Context
+
+The portal now has several interfaces: the API the Web Application calls, the internal calls from the Backend Application to the Integration Service, and the integrations with TARA, KVKR, TIS, the Estonian Defence Forces Systems, and notification providers. They are listed in link:../docs/interface_inventory.adoc[interface_inventory.adoc].
+Earlier decisions and drivers constrain how these interfaces should look:
+
+* *QA-004, QA-008, QAS-003, R-007:* a change in one external interface must stay inside its adapter in the Integration Service and must not ripple into the rest of the portal.
+* *ADR-0002:* the portal is not the owner of KVKR, TIS, or Estonian Defence Forces data, so their data models should not become portal data models.
+* *SG-002, SG-003, R-015:* every API call must be authorized, and the API must not reveal whether another person's request exists.
+* *R-013 and the link:../docs/identity_model.adoc[identity model]:* the personal identification code, the Citizen ID, and the KVKR case reference must not appear in URLs or be used to look things up.
+* *QA-007 and the workflow in link:../docs/architecture.adoc#_workflow_and_messaging[architecture.adoc]:* submissions must be safe to retry.
+* *Helpdesk support:* staff need to correlate a citizen's error with logs and audit events without seeing personal data.
+
+The team needs one approach for drawing interface boundaries, writing specifications, reporting errors, and versioning, so each new endpoint does not decide these again.
+
+== Decision
+
+=== Boundaries
+
+. *Portal API* (IF-01): the only portal interface reachable from the internet. It is provided by the Backend Application and used only by the Web Application. There is no public third-party API for now.
+. *Integration API* (IF-02): internal, from the Backend Application to the Integration Service. It uses the portal's own terms (request, case status, pending reason). KVKR, TIS, and Estonian Defence Forces data formats never cross it.
+. *External interfaces* (IF-03 to IF-07) are owned by the external organizations. The portal adapts to them with one adapter per external system and version, and does not try to change them.
+
+=== Specification
+
+. The Portal API and the Integration API are specified *contract-first* in *OpenAPI 3.1* files in `/api/`, starting with link:../api/portal-api.yaml[api/portal-api.yaml]. The specification is the source of truth: changes to it are reviewed in a pull request before the implementation changes.
+. Events between containers, if a message broker is introduced, will be specified in *AsyncAPI*. There is no broker today; the only event is internal to the Backend Application.
+
+=== Conventions for portal-owned APIs
+
+. *Resource-oriented REST with JSON.* Paths name resources, such as `/health-assessment-requests/+{requestId}+`.
+. *Only random portal IDs in paths and parameters* (Request ID, delegation ID).Personal identification codes, Citizen IDs, and KVKR case references are never used as lookup keys.
+. *Errors* use RFC 9457 problem details (`application/problem+json`) with a stable `code`, for example `REQUEST_NOT_FOUND_OR_NO_ACCESS`. A code never changes meaning. Each error includes a `traceId` that helpdesk staff can match to logs, and never includes personal data.
+. *Unauthorized and non-existent resources return the same response*, so the API cannot be used to discover other people's requests.
+. *State-changing calls are idempotent.* The Request ID in the path is the idempotency key. A repeat with the same body returns the original result, and a repeat with a different body returns `SUBMISSION_CONFLICT`.
+. *Authentication* on the Portal API is a session cookie with a CSRF token for state-changing calls. On the Integration API it is mutual TLS with service identities.
+
+=== Versioning
+
+. The major version is in the path (`/api/v1`, `/internal/v1`).
+. Within a major version, only additive changes are allowed: new endpoints, new optional fields, new error codes. Consumers must ignore fields they do not recognize and handle unknown error codes generically.
+. A breaking change creates a new major version. The old version stays available until all consumers have moved. Today the Web Application and the Backend Application are released together, so this overlap is short.
+. For external interfaces, a new external version gets a new adapter version in the Integration Service, with its own contract tests. The old adapter stays until the external owner retires the old version.
+
+== Alternatives considered
+
+* *Code-first specifications* (generate OpenAPI from annotations in the code) - less duplicated effort, but the contract is only visible after implementation, so it is harder to review security properties such as identifiers in paths and error behavior before they are built.
+* *GraphQL for the Portal API* - flexible queries for the Web Application, but authorization and auditing would have to be enforced per field and per nested object, which makes R-015 harder to control and test. Rejected for now.
+* *gRPC for the Integration API* - efficient and strongly typed, but it would need a second toolchain next to OpenAPI and gives little benefit at our expected volumes. Rejected for now.
+* *Version in a header or media type* instead of the path - keeps URLs stable, but is harder to see in logs, gateways, and tests. Rejected.
+* *One shared data model, including external formats, across all containers* - less mapping code, but every KVKR or TIS change would reach the Backend Application and the Web Application, which conflicts with QA-008 and ADR-0002. Rejected.
+* *A public third-party API now* - would cover the scenario's "regulated public APIs" capability, but no current driver needs it and it would add an internet-facing interface with its own authentication and abuse risks. Deferred.
+
+== Consequences
+
+* Positive:
+** Security-relevant properties of every endpoint - authentication, identifiers, error behaviour, idempotency - can be reviewed in the specification before code exists.
+** The specification can drive contract tests and checks such as the R-015 test that calls every endpoint with another person's Request ID.
+** External changes stay inside the Integration Service (QAS-003).
+** Consistent error codes and trace IDs make helpdesk support possible without exposing personal data.
+* Negative or risks:
+** Specifications can drift from the implementation unless CI checks them; without that, the contract-first rule is only on paper.
+** The Integration Service needs mapping code for every external interface and version, which costs development effort and adds some latency (QA-005).
+** Returning the same 404 for "not found" and "no access" makes problems harder to diagnose. Helpdesk staff have to rely on the trace ID and the audit record.
+** Path versioning can mean running two versions of an endpoint at the same time during a migration.
+** Without a public third-party API, the scenario's "regulated public APIs" capability is not covered.
+* Follow-up actions:
+** Add an OpenAPI linter and a check that the implementation matches the specification to the CI pipeline.
+** Write the Integration API specification (`api/integration-api.yaml`).
+** Decide the deprecation window for the Portal API if the Web Application and the Backend Application are ever released separately.
+** Decide whether KVKR can push status changes; if so, specify that interface (AsyncAPI or X-tee service).
+** Record the identity, authorization, and staff-role decisions in ADR-0004.
+
+== References
+
+* link:../docs/interface_inventory.adoc[Interface inventory]
+* link:../api/portal-api.yaml[Portal API specification]
+* link:ADR-0002-data-ownership.adoc[ADR-0002 - data ownership]
+* link:../docs/access_control_matrix.adoc[Access control matrix]
+* link:../docs/identity_model.adoc[Identity model]
+* link:../risk/risk_register.adoc[Risk register] - R-007, R-013, R-015
+* link:../docs/quality_attributes.adoc[Quality attributes] - QA-004, QA-005, QA-007, QA-008
+* OpenAPI Specification 3.1: https://spec.openapis.org/oas/v3.1.0
+* RFC 9457, Problem Details for HTTP APIs: https://www.rfc-editor.org/rfc/rfc9457

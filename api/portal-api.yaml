@@ -1,0 +1,550 @@
+openapi: 3.1.0
+info:
+  title: Citizen Services Portal API
+  version: 0.1.0
+  description: >
+    Portal API (interface IF-01 in docs/interface_inventory.adoc), provided by the
+    Backend Application and used by the Web Application. This version covers the
+    health-assessment request workflow: creating a draft, submitting it, and
+    viewing its status, directly or as a delegate.
+
+
+    Conventions (ADR-0003):
+
+    - Versioning: the major version is part of the path (/api/v1). Changes within
+      v1 are additive only; clients must ignore fields they do not recognise.
+
+    - Identifiers: only random portal IDs (requestId, delegationId) appear in paths
+      and parameters. The personal identification code, the Citizen ID, and the
+      KVKR case reference are never used to look anything up.
+
+    - Authentication: a session cookie created by the Backend Application after
+      login through TARA. State-changing calls also need a CSRF token.
+
+    - Authorization: checked by the Backend Application on every call
+      (docs/access_control_matrix.adoc). A request the caller may not see returns
+      the same 404 response as a request that does not exist.
+
+    - Errors: application/problem+json (RFC 9457) with a stable `code`. A code
+      never changes meaning; new codes may be added.
+
+    - Idempotency: the requestId identifies one submission. Repeating a call with
+      the same requestId never creates a second request (docs/architecture.adoc,
+      Workflow and messaging).
+
+
+    Document upload is not part of this version.
+  contact:
+    name: Citizen Services Portal team
+servers:
+  - url: https://portal.example.ee/api/v1
+    description: Placeholder host
+tags:
+  - name: Health-assessment requests
+    description: Create, submit, and view health-assessment requests, directly or as a delegate.
+  - name: Operations
+    description: Operational endpoints that return no citizen data.
+
+paths:
+  /health:
+    get:
+      tags: [Operations]
+      summary: Health check
+      description: Liveness check for load balancers. Returns no data about requests or users.
+      operationId: getHealth
+      security: []
+      responses:
+        "200":
+          description: The Backend Application is running.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    const: ok
+
+  /health-assessment-requests:
+    post:
+      tags: [Health-assessment requests]
+      summary: Create or resume a draft request
+      description: >
+        Called when the citizen opens the health-assessment form. Creates a draft
+        with a new random requestId. A citizen can have only one open draft, so if
+        a draft already exists it is returned instead (200). Calling this twice
+        therefore never creates two drafts. Drafts that are not submitted expire
+        after 30 days. The draft always belongs to the caller; there is no way to
+        create a request on someone else's behalf.
+      operationId: createHealthAssessmentRequest
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "201":
+          description: A new draft was created.
+          headers:
+            Location:
+              description: URL of the new request.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthAssessmentRequest"
+        "200":
+          description: The citizen's existing open draft is returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthAssessmentRequest"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    get:
+      tags: [Health-assessment requests]
+      summary: List requests
+      description: >
+        Lists the caller's own requests. A delegate passes delegationId to list
+        the requests of the person who granted the delegation; the delegation must
+        be current and cover viewing status. The list contains status information
+        only, never health information.
+      operationId: listHealthAssessmentRequests
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: delegationId
+          in: query
+          required: false
+          description: Act on behalf of the grantor of this delegation.
+          schema:
+            $ref: "#/components/schemas/Uuid"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: cursor
+          in: query
+          required: false
+          description: Opaque cursor from the previous page's nextCursor.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: One page of requests, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/HealthAssessmentRequest"
+                  nextCursor:
+                    type: [string, "null"]
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/DelegationNotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /health-assessment-requests/{requestId}:
+    parameters:
+      - $ref: "#/components/parameters/RequestId"
+    get:
+      tags: [Health-assessment requests]
+      summary: View a request's status
+      description: >
+        Returns the request and its current status. Allowed for the owner and for
+        a delegate with a current delegation covering "view status".
+
+
+        Before KRA has accepted the request, the status comes from the Portal
+        Database. After that the Backend Application fetches the live status from
+        KVKR. If KVKR does not answer in time, the response is still 200: it
+        contains the last known status with statusSource SNAPSHOT and the time it
+        was retrieved (scenario "TIS unavailable during health-related workflow",
+        QAS-001). The response is returned within 5 seconds in every case.
+      operationId: getHealthAssessmentRequest
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: The request and its status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthAssessmentRequest"
+              examples:
+                forwarded:
+                  summary: Accepted by KRA, live status
+                  value:
+                    requestId: 3f6c2a9e-7b1d-4c8e-9a52-1d0e8b7f4a21
+                    type: HEALTH_ASSESSMENT
+                    status: FORWARDED
+                    kvkrCaseReference: KVKR-2026-004817
+                    externalStatus: In review at KRA
+                    statusSource: KVKR_LIVE
+                    statusRetrievedAt: "2026-10-23T10:42:05Z"
+                    createdAt: "2026-10-20T08:15:00Z"
+                    submittedAt: "2026-10-20T08:21:37Z"
+                    pendingReason: null
+                    actingFor: null
+                kvkrUnavailable:
+                  summary: KVKR not reachable, last known status shown
+                  value:
+                    requestId: 3f6c2a9e-7b1d-4c8e-9a52-1d0e8b7f4a21
+                    type: HEALTH_ASSESSMENT
+                    status: FORWARDED
+                    kvkrCaseReference: KVKR-2026-004817
+                    externalStatus: In review at KRA
+                    statusSource: SNAPSHOT
+                    statusRetrievedAt: "2026-10-22T16:03:44Z"
+                    createdAt: "2026-10-20T08:15:00Z"
+                    submittedAt: "2026-10-20T08:21:37Z"
+                    pendingReason: null
+                    actingFor: null
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/RequestNotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /health-assessment-requests/{requestId}/submission:
+    parameters:
+      - $ref: "#/components/parameters/RequestId"
+    put:
+      tags: [Health-assessment requests]
+      summary: Submit a draft request
+      description: >
+        Submits the draft. Only the owner may submit; delegates get NOT_DELEGABLE.
+
+
+        Idempotency: the requestId in the path acts as the idempotency key, and
+        PUT is used because repeating it has no further effect. The first
+        successful call stores the submission, sets the status to RECEIVED, and
+        returns 202. Forwarding to TIS and KVKR happens afterwards (accept first,
+        forward afterwards). Any repeat with the same body, for example after a
+        double click or a lost reply, returns 202 with the same submission and does
+        not create a second request or forward it again. A repeat with a different
+        body returns 409 SUBMISSION_CONFLICT; the original submission is kept.
+      operationId: submitHealthAssessmentRequest
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionInput"
+      responses:
+        "202":
+          description: >
+            The submission is stored (status RECEIVED or later). Returned for the
+            first call and for identical repeats.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthAssessmentRequest"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/RequestNotFound"
+        "409":
+          description: >
+            SUBMISSION_CONFLICT - the request was already submitted with different
+            content, or DRAFT_EXPIRED - the draft is too old to submit.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+              example:
+                type: https://portal.example.ee/problems/submission-conflict
+                title: Request already submitted
+                status: 409
+                code: SUBMISSION_CONFLICT
+                detail: This request was already submitted with different content.
+                traceId: 01JB8Z6Q3W4X5Y6Z7A8B9C0D1E
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: __Host-portal_session
+      description: >
+        Random session ID set by the Backend Application after a successful TARA
+        login (HttpOnly, Secure, SameSite=Lax). The session holds the Citizen ID;
+        the browser never sees it.
+    csrfToken:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+      description: Per-session token required on state-changing calls.
+
+  parameters:
+    RequestId:
+      name: requestId
+      in: path
+      required: true
+      description: Random portal Request ID. Contains no personal data.
+      schema:
+        $ref: "#/components/schemas/Uuid"
+
+  schemas:
+    Uuid:
+      type: string
+      format: uuid
+
+    RequestStatus:
+      type: string
+      description: >
+        Portal-side status. DRAFT and RECEIVED are owned by the portal; PENDING
+        means an external system has not answered yet and the portal will retry;
+        FORWARDED means KRA has accepted the request and KVKR owns the case.
+      enum: [DRAFT, RECEIVED, PENDING, FORWARDED]
+
+    HealthAssessmentRequest:
+      type: object
+      required: [requestId, type, status, statusSource, createdAt]
+      properties:
+        requestId:
+          $ref: "#/components/schemas/Uuid"
+        type:
+          type: string
+          const: HEALTH_ASSESSMENT
+        status:
+          $ref: "#/components/schemas/RequestStatus"
+        pendingReason:
+          type: [string, "null"]
+          description: Why the request is PENDING. Never contains health information.
+          enum: [WAITING_FOR_HEALTH_INFORMATION_SYSTEM, WAITING_FOR_KVKR, null]
+        kvkrCaseReference:
+          type: [string, "null"]
+          description: >
+            KRA's case reference, shown so the citizen can quote it to KRA.
+            Display only; never used to look up a request.
+        externalStatus:
+          type: [string, "null"]
+          description: Case status text from KVKR, when the request is FORWARDED.
+        statusSource:
+          type: string
+          description: >
+            PORTAL - status from the Portal Database (before forwarding).
+            KVKR_LIVE - fetched from KVKR for this response.
+            SNAPSHOT - last known status, because KVKR did not answer in time.
+          enum: [PORTAL, KVKR_LIVE, SNAPSHOT]
+        statusRetrievedAt:
+          type: [string, "null"]
+          format: date-time
+          description: When the KVKR status was fetched. Always shown with a SNAPSHOT.
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: [string, "null"]
+          format: date-time
+        actingFor:
+          description: >
+            Present when the caller is a delegate. Names the person represented,
+            not their identifiers.
+          oneOf:
+            - type: "null"
+            - type: object
+              required: [delegationId, displayName]
+              properties:
+                delegationId:
+                  $ref: "#/components/schemas/Uuid"
+                displayName:
+                  type: string
+
+    SubmissionInput:
+      type: object
+      additionalProperties: false
+      required: [healthDataRetrievalAcknowledged]
+      properties:
+        healthDataRetrievalAcknowledged:
+          type: boolean
+          const: true
+          description: >
+            The citizen confirms they understand that the portal will request the
+            health information needed for the assessment from TIS.
+        contactPhone:
+          type: [string, "null"]
+          pattern: "^\\+[1-9][0-9]{6,14}$"
+          description: Optional phone number for KRA to contact the citizen.
+        additionalInformation:
+          type: [string, "null"]
+          maxLength: 2000
+          description: Free text for KRA. Should not contain health details.
+
+    Problem:
+      type: object
+      description: RFC 9457 problem details with a stable code.
+      required: [type, title, status, code, traceId]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          $ref: "#/components/schemas/ErrorCode"
+        detail:
+          type: string
+          description: Human-readable explanation. Never contains personal data or data from the request.
+        traceId:
+          type: string
+          description: Correlates the error with logs and audit events for helpdesk staff. Contains no personal data.
+        errors:
+          type: array
+          description: Field-level problems for VALIDATION_FAILED.
+          items:
+            type: object
+            required: [field, code]
+            properties:
+              field:
+                type: string
+              code:
+                type: string
+
+    ErrorCode:
+      type: string
+      description: >
+        Stable error codes. A code never changes meaning; new codes may be added
+        within v1, so clients must handle unknown codes generically.
+      enum:
+        - AUTHENTICATION_REQUIRED
+        - ASSURANCE_LEVEL_TOO_LOW
+        - CSRF_TOKEN_INVALID
+        - NOT_DELEGABLE
+        - REQUEST_NOT_FOUND_OR_NO_ACCESS
+        - DELEGATION_NOT_FOUND_OR_INACTIVE
+        - VALIDATION_FAILED
+        - SUBMISSION_CONFLICT
+        - DRAFT_EXPIRED
+        - RATE_LIMITED
+        - INTERNAL_ERROR
+
+  responses:
+    Unauthenticated:
+      description: AUTHENTICATION_REQUIRED - no valid session. The Web Application sends the user to TARA.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: https://portal.example.ee/problems/authentication-required
+            title: Please log in
+            status: 401
+            code: AUTHENTICATION_REQUIRED
+            traceId: 01JB8Z6Q3W4X5Y6Z7A8B9C0D1F
+    Forbidden:
+      description: >
+        NOT_DELEGABLE - a delegate tried an action only the person themselves may
+        do. ASSURANCE_LEVEL_TOO_LOW - the login method does not meet the required
+        level. CSRF_TOKEN_INVALID - missing or wrong CSRF token.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: https://portal.example.ee/problems/not-delegable
+            title: This action can only be done by the person themselves
+            status: 403
+            code: NOT_DELEGABLE
+            traceId: 01JB8Z6Q3W4X5Y6Z7A8B9C0D1G
+    RequestNotFound:
+      description: >
+        REQUEST_NOT_FOUND_OR_NO_ACCESS - the request does not exist, or the caller
+        is neither its owner nor a current delegate. Both cases return exactly this
+        response, so the API does not reveal whether a request exists (R-015). The
+        attempt is recorded in the Audit Store.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: https://portal.example.ee/problems/request-not-found-or-no-access
+            title: Request not found or you do not have access to it
+            status: 404
+            code: REQUEST_NOT_FOUND_OR_NO_ACCESS
+            traceId: 01JB8Z6Q3W4X5Y6Z7A8B9C0D1H
+    DelegationNotFound:
+      description: >
+        DELEGATION_NOT_FOUND_OR_INACTIVE - the delegation does not exist, does not
+        belong to the caller, has expired, has been revoked, or does not cover
+        viewing status (R-014).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: https://portal.example.ee/problems/delegation-not-found-or-inactive
+            title: This authorization is no longer active
+            status: 404
+            code: DELEGATION_NOT_FOUND_OR_INACTIVE
+            traceId: 01JB8Z6Q3W4X5Y6Z7A8B9C0D1J
+    ValidationFailed:
+      description: VALIDATION_FAILED - the input does not match the schema. Field problems are listed in `errors`.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: https://portal.example.ee/problems/validation-failed
+            title: Some fields are not valid
+            status: 400
+            code: VALIDATION_FAILED
+            traceId: 01JB8Z6Q3W4X5Y6Z7A8B9C0D1K
+            errors:
+              - field: contactPhone
+                code: PATTERN_MISMATCH
+    RateLimited:
+      description: RATE_LIMITED - too many requests from this session (SG-008).
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    InternalError:
+      description: INTERNAL_ERROR - unexpected error. Safe to retry; submissions are idempotent.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"

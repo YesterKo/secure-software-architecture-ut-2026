@@ -1,0 +1,97 @@
+= Interface Inventory
+:toc:
+:toclevels: 2
+
+This inventory lists the key interfaces of the Citizen Services Portal: APIs, events, and integrations with external systems.
+It follows the container view in link:architecture.adoc#_4_containers[architecture.adoc, section 4] and the boundary rules in link:../adrs/ADR-0003-interface-boundaries-and-specification.adoc[ADR-0003].
+Versioning approaches are a *draft* and will be refined as external interfaces are validated in iteration Phase 1.
+
+== Interfaces
+
+[cols="1,2,2,2,2,2,3",options="header"]
+|===
+|ID |Interface |Producer (provides) / consumer (calls) |Protocol |Authentication |Versioning (draft) |Specification / notes
+
+|IF-01
+|*Portal API*
+|Backend Application / Web Application
+|HTTPS, JSON (REST)
+|Session cookie created after TARA login; CSRF token on state-changing calls. Authorization per request in the Backend Application (link:access_control_matrix.adoc[access control matrix]).
+|Major version in the path (`/api/v1`). Additive changes within a major version; consumers ignore unknown fields.
+|link:../api/portal-api.yaml[api/portal-api.yaml] (OpenAPI 3.1). The only portal interface reachable from the internet.
+
+|IF-02
+|*Integration API*
+|Integration Service / Backend Application
+|HTTPS, JSON (REST), internal network only
+|Mutual TLS; the Integration Service accepts only the `backend-application` service identity.
+|Major version in the path (`/internal/v1`). Both containers are released by the portal team, so breaking changes are coordinated in one release.
+|To be specified in `api/integration-api.yaml`. Uses portal terms (request, case status), never KVKR or TIS data formats.
+
+|IF-03
+|*TARA authentication*
+|TARA / Backend Application
+|OpenID Connect (authorization code flow) over HTTPS
+|Client registration with RIA (client ID and secret); ID token signature validated against TARA's published keys.
+|Owned by RIA. The portal follows TARA's published protocol version and tests changes against the TARA demo environment.
+|Identity model: link:identity_model.adoc[identity_model.adoc].
+
+|IF-04
+|*KVKR integration*
+|KVKR / Integration Service
+|X-tee (assumed)
+|X-tee subsystem certificates; KRA authorizes the portal subsystem per KVKR service.
+|Owned by KRA. One adapter per supported KVKR service version; contract tests per version (QA-004, R-007).
+|Forward request, look up case by Request ID (unconfirmed, R-003), fetch case status.
+
+|IF-05
+|*Estonian Defence Forces integration*
+|Estonian Defence Forces Systems / Integration Service
+|X-tee (assumed)
+|X-tee subsystem certificates.
+|Owned by the Estonian Defence Forces. Same adapter-per-version approach as IF-04.
+|Not used by the health-assessment workflow; needed for reserve-service workflows.
+
+|IF-06
+|*TIS integration*
+|TIS / Integration Service
+|X-tee
+|X-tee subsystem certificates; TEHIK authorizes the portal subsystem.
+|Owned by TEHIK. Adapter per version; scenario "TIS interface changes" (QAS-003).
+|Health information is returned in memory only and never stored (ADR-0002).
+
+|IF-07
+|*Notification delivery*
+|Email/SMS Notification Providers / Backend Application
+|Provider HTTPS API
+|Provider-issued API credentials, stored as secrets.
+|Owned by each provider. Wrapped in one notification adapter inside the Backend Application.
+|Messages contain only a prompt to log in (SG-009).
+
+|IF-08
+|*Audit events*
+|Audit Store / Backend Application
+|Append-only writes over the store's native protocol
+|Separate store credentials with append-only permission (R-011).
+|Each event carries a `schemaVersion`; old events are never rewritten.
+|Event fields: actor, person represented, action, resource, time, outcome (SG-005).
+
+|IF-09
+|*Request status changed* (internal event)
+|Backend Application / Backend Application (notification and audit handlers)
+|In-process event, persisted with the workflow state in the Portal Database
+|Not exposed outside the container.
+|Event type plus `schemaVersion`.
+|Raised when a request becomes Received, Pending, or Forwarded. There is no message broker in the container view. If one is added, events will be specified with AsyncAPI (ADR-0003).
+|===
+
+== Not offered yet
+
+* *Public API for third-party service providers.* The scenario lists regulated public APIs as a portal capability. They are not part of the current design: none of our drivers require them, and each one would add an internet-facing interface to secure. If added, they would be a separate interface with their own authentication, versioning, and deprecation policy.
+* *Status updates pushed from KVKR.* The portal currently fetches case status when the citizen opens the status page. Whether KVKR can notify the portal of changes is an open question (R-003).
+
+== Open points
+
+* Confirm X-tee for KVKR and the Estonian Defence Forces Systems (IF-04, IF-05).
+* Agree a deprecation window for IF-01 if the Web Application and Backend Application are ever released separately.
+* Write the Integration API specification (IF-02).
