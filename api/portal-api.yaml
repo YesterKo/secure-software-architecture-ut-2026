@@ -1,18 +1,25 @@
 openapi: 3.1.0
 info:
   title: Citizen Services Portal API
-  version: 0.1.0
+  version: 0.2.0
   description: >
     Portal API (interface IF-01 in docs/interface_inventory.adoc), provided by the
     Backend Application and used by the Web Application. This version covers the
-    health-assessment request workflow: creating a draft, submitting it, and
-    viewing its status, directly or as a delegate.
+    health-assessment request workflow: creating a draft, submitting it, viewing
+    its status directly or as a delegate, and taking a submitted request back to
+    edit and resubmit it.
+
+
+    Changes in 0.2.0 (all additive, see docs/api_evolution_strategy.adoc and
+    ADR-0005): take-back endpoint, read-back of submitted content, revision
+    numbers, and two new status values. Clients built for 0.1.0 keep working.
 
 
     Conventions (ADR-0003):
 
     - Versioning: the major version is part of the path (/api/v1). Changes within
-      v1 are additive only; clients must ignore fields they do not recognise.
+      v1 are additive only; clients must ignore fields they do not recognize and
+      must handle enum values they do not recognize (ADR-0005).
 
     - Identifiers: only random portal IDs (requestId, delegationId) appear in paths
       and parameters. The personal identification code, the Citizen ID, and the
@@ -22,15 +29,17 @@ info:
       login through TARA. State-changing calls also need a CSRF token.
 
     - Authorization: checked by the Backend Application on every call
-      (docs/access_control_matrix.adoc). A request the caller may not see returns
-      the same 404 response as a request that does not exist.
+      (docs/access_control_matrix.adoc, docs/api_security_review.adoc). A request
+      the caller may not see returns the same 404 response as a request that does
+      not exist.
 
     - Errors: application/problem+json (RFC 9457) with a stable `code`. A code
       never changes meaning; new codes may be added.
 
-    - Idempotency: the requestId identifies one submission. Repeating a call with
-      the same requestId never creates a second request (docs/architecture.adoc,
-      Workflow and messaging).
+    - Idempotency: a submission is identified by requestId plus revision.
+      Repeating a call for the same requestId and revision never creates a second
+      request or a second submission (docs/architecture.adoc, Workflow and
+      messaging).
 
 
     Document upload is not part of this version.
@@ -41,7 +50,7 @@ servers:
     description: Placeholder host
 tags:
   - name: Health-assessment requests
-    description: Create, submit, and view health-assessment requests, directly or as a delegate.
+    description: Create, submit, take back, and view health-assessment requests.
   - name: Operations
     description: Operational endpoints that return no citizen data.
 
@@ -114,7 +123,7 @@ paths:
         Lists the caller's own requests. A delegate passes delegationId to list
         the requests of the person who granted the delegation; the delegation must
         be current and cover viewing status. The list contains status information
-        only, never health information.
+        only, never the submitted content or health information.
       operationId: listHealthAssessmentRequests
       security:
         - sessionCookie: []
@@ -173,7 +182,8 @@ paths:
       summary: View a request's status
       description: >
         Returns the request and its current status. Allowed for the owner and for
-        a delegate with a current delegation covering "view status".
+        a delegate with a current delegation covering "view status". The submitted
+        content is not included; the owner reads it from the submission endpoint.
 
 
         Before KRA has accepted the request, the status comes from the Portal
@@ -182,25 +192,35 @@ paths:
         contains the last known status with statusSource SNAPSHOT and the time it
         was retrieved (scenario "TIS unavailable during health-related workflow",
         QAS-001). The response is returned within 5 seconds in every case.
+
+
+        The ETag header carries the current revision, so clients can detect that
+        the request was taken back or resubmitted in another tab.
       operationId: getHealthAssessmentRequest
       security:
         - sessionCookie: []
       responses:
         "200":
           description: The request and its status.
+          headers:
+            ETag:
+              $ref: "#/components/headers/RevisionETag"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthAssessmentRequest"
               examples:
                 forwarded:
-                  summary: Accepted by KRA, live status
+                  summary: Accepted by KRA, live status, take-back still possible
                   value:
                     requestId: 3f6c2a9e-7b1d-4c8e-9a52-1d0e8b7f4a21
                     type: HEALTH_ASSESSMENT
                     status: FORWARDED
+                    revision: 1
+                    takeBackAllowed: true
+                    lastTakeBackOutcome: null
                     kvkrCaseReference: KVKR-2026-004817
-                    externalStatus: In review at KRA
+                    externalStatus: Waiting for review at KRA
                     statusSource: KVKR_LIVE
                     statusRetrievedAt: "2026-10-23T10:42:05Z"
                     createdAt: "2026-10-20T08:15:00Z"
@@ -213,12 +233,32 @@ paths:
                     requestId: 3f6c2a9e-7b1d-4c8e-9a52-1d0e8b7f4a21
                     type: HEALTH_ASSESSMENT
                     status: FORWARDED
+                    revision: 1
+                    takeBackAllowed: false
+                    lastTakeBackOutcome: null
                     kvkrCaseReference: KVKR-2026-004817
-                    externalStatus: In review at KRA
+                    externalStatus: Waiting for review at KRA
                     statusSource: SNAPSHOT
                     statusRetrievedAt: "2026-10-22T16:03:44Z"
                     createdAt: "2026-10-20T08:15:00Z"
                     submittedAt: "2026-10-20T08:21:37Z"
+                    pendingReason: null
+                    actingFor: null
+                editing:
+                  summary: Taken back, revision 2 being edited
+                  value:
+                    requestId: 3f6c2a9e-7b1d-4c8e-9a52-1d0e8b7f4a21
+                    type: HEALTH_ASSESSMENT
+                    status: EDITING
+                    revision: 2
+                    takeBackAllowed: false
+                    lastTakeBackOutcome: COMPLETED
+                    kvkrCaseReference: null
+                    externalStatus: null
+                    statusSource: PORTAL
+                    statusRetrievedAt: null
+                    createdAt: "2026-10-20T08:15:00Z"
+                    submittedAt: null
                     pendingReason: null
                     actingFor: null
         "401":
@@ -233,21 +273,66 @@ paths:
   /health-assessment-requests/{requestId}/submission:
     parameters:
       - $ref: "#/components/parameters/RequestId"
+    get:
+      tags: [Health-assessment requests]
+      summary: Read the submitted content
+      description: >
+        Added in 0.2.0. Returns the content of the current revision, so the Web
+        Application can pre-fill the form after a take-back. While the request is
+        EDITING, this is the content of the revision that was taken back. Only the
+        owner may read it; delegates get NOT_DELEGABLE because their delegation
+        covers viewing status only.
+      operationId: getHealthAssessmentSubmission
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: The submitted content.
+          headers:
+            ETag:
+              $ref: "#/components/headers/RevisionETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmittedContent"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/RequestNotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
     put:
       tags: [Health-assessment requests]
-      summary: Submit a draft request
+      summary: Submit or resubmit a request
       description: >
-        Submits the draft. Only the owner may submit; delegates get NOT_DELEGABLE.
+        Submits a draft, or resubmits a request that was taken back. Only the
+        owner may submit; delegates get NOT_DELEGABLE.
 
 
-        Idempotency: the requestId in the path acts as the idempotency key, and
-        PUT is used because repeating it has no further effect. The first
-        successful call stores the submission, sets the status to RECEIVED, and
-        returns 202. Forwarding to TIS and KVKR happens afterwards (accept first,
-        forward afterwards). Any repeat with the same body, for example after a
-        double click or a lost reply, returns 202 with the same submission and does
-        not create a second request or forward it again. A repeat with a different
-        body returns 409 SUBMISSION_CONFLICT; the original submission is kept.
+        Idempotency: the requestId plus the revision in the body is the
+        idempotency key, and PUT is used because repeating it has no further
+        effect. The first successful call stores the submission, sets the status
+        to RECEIVED, and returns 202. Forwarding to TIS and KVKR happens
+        afterwards (accept first, forward afterwards). Any repeat with the same
+        revision and body returns 202 with the same submission and is not
+        forwarded again. A repeat with a different body returns 409
+        SUBMISSION_CONFLICT; the stored submission is kept.
+
+
+        Revisions: a draft is revision 1. Each completed take-back opens the next
+        revision for editing. A resubmission must name the revision being edited.
+        If the request has moved on in the meantime, for example it was
+        resubmitted from another tab, the call returns 409 REVISION_OUTDATED.
+
+
+        Compatibility: clients built for 0.1.0 do not send revision. A missing
+        revision is treated as revision 1, so their first submission and its
+        repeats behave exactly as before. Such responses carry a Deprecation
+        header, because omitting revision will not be allowed in /api/v2.
       operationId: submitHealthAssessmentRequest
       security:
         - sessionCookie: []
@@ -263,6 +348,13 @@ paths:
           description: >
             The submission is stored (status RECEIVED or later). Returned for the
             first call and for identical repeats.
+          headers:
+            ETag:
+              $ref: "#/components/headers/RevisionETag"
+            Deprecation:
+              $ref: "#/components/headers/Deprecation"
+            Sunset:
+              $ref: "#/components/headers/Sunset"
           content:
             application/json:
               schema:
@@ -277,19 +369,122 @@ paths:
           $ref: "#/components/responses/RequestNotFound"
         "409":
           description: >
-            SUBMISSION_CONFLICT - the request was already submitted with different
-            content, or DRAFT_EXPIRED - the draft is too old to submit.
+            SUBMISSION_CONFLICT - this revision was already submitted with
+            different content. REVISION_OUTDATED - the named revision is no longer
+            the one being edited. REQUEST_NOT_EDITABLE - the request cannot be
+            submitted in its current status, for example while a take-back is
+            waiting for KRA. DRAFT_EXPIRED - the draft or taken-back request was
+            not submitted within 30 days.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+              examples:
+                conflict:
+                  value:
+                    type: https://portal.example.ee/problems/submission-conflict
+                    title: Request already submitted
+                    status: 409
+                    code: SUBMISSION_CONFLICT
+                    detail: This revision was already submitted with different content.
+                    traceId: 01JB8Z6Q3W4X5Y6Z7A8B9C0D1E
+                outdated:
+                  value:
+                    type: https://portal.example.ee/problems/revision-outdated
+                    title: This request has changed
+                    status: 409
+                    code: REVISION_OUTDATED
+                    detail: The request was changed elsewhere. Reload it before submitting.
+                    traceId: 01JB8Z6Q3W4X5Y6Z7A8B9C0D1L
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /health-assessment-requests/{requestId}/take-back:
+    parameters:
+      - $ref: "#/components/parameters/RequestId"
+    post:
+      tags: [Health-assessment requests]
+      summary: Take back a submitted request to edit it
+      description: >
+        Added in 0.2.0. Takes back the named revision so the citizen can edit and
+        resubmit it. Only the owner may do this; delegates get NOT_DELEGABLE.
+        Allowed only while takeBackAllowed is true on the request (ADR-0005).
+
+
+        - If KRA has not accepted the request yet (RECEIVED or PENDING), the
+          portal stops forwarding it, first checking with KVKR that a forward has
+          not already arrived. The request becomes EDITING at the next revision
+          and the call returns 200.
+
+        - If KRA has accepted it (FORWARDED), the portal asks KVKR to release the
+          case for amendment. The request becomes TAKE_BACK_REQUESTED and the call
+          returns 202. When KRA answers, the request becomes EDITING
+          (lastTakeBackOutcome COMPLETED) or returns to FORWARDED
+          (lastTakeBackOutcome REFUSED_BY_KRA), and the citizen gets a
+          notification to log in.
+
+
+        Idempotency: the requestId plus the revision in the body is the key.
+        Repeating a take-back of the same revision returns the current state
+        without asking KVKR again. A request can be taken back at most 3 times
+        (TAKE_BACK_LIMIT_REACHED).
+      operationId: takeBackHealthAssessmentRequest
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TakeBackInput"
+      responses:
+        "200":
+          description: Taken back. The request is EDITING at the next revision.
+          headers:
+            ETag:
+              $ref: "#/components/headers/RevisionETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthAssessmentRequest"
+        "202":
+          description: KRA has been asked to release the case. The request is TAKE_BACK_REQUESTED.
+          headers:
+            ETag:
+              $ref: "#/components/headers/RevisionETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthAssessmentRequest"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/RequestNotFound"
+        "409":
+          description: >
+            TAKE_BACK_NOT_ALLOWED - the request cannot be taken back now, for
+            example KRA has started processing it or KVKR cannot be reached to
+            confirm. REVISION_OUTDATED - the named revision is no longer current.
+            TAKE_BACK_LIMIT_REACHED - the request has already been taken back 3
+            times.
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
               example:
-                type: https://portal.example.ee/problems/submission-conflict
-                title: Request already submitted
+                type: https://portal.example.ee/problems/take-back-not-allowed
+                title: This request can no longer be taken back
                 status: 409
-                code: SUBMISSION_CONFLICT
-                detail: This request was already submitted with different content.
-                traceId: 01JB8Z6Q3W4X5Y6Z7A8B9C0D1E
+                code: TAKE_BACK_NOT_ALLOWED
+                detail: KRA has started processing this request. Contact KRA to change it.
+                traceId: 01JB8Z6Q3W4X5Y6Z7A8B9C0D1M
         "429":
           $ref: "#/components/responses/RateLimited"
         "500":
@@ -320,6 +515,24 @@ components:
       schema:
         $ref: "#/components/schemas/Uuid"
 
+  headers:
+    RevisionETag:
+      description: Current revision of the request, as a strong ETag, for example "2".
+      schema:
+        type: string
+    Deprecation:
+      description: >
+        Sent only when the request omitted revision (a 0.1.0 client). Marks that
+        behaviour as deprecated (RFC 9745).
+      schema:
+        type: string
+    Sunset:
+      description: >
+        Sent together with Deprecation. Date after which omitting revision is no
+        longer accepted, i.e. when /api/v1 is retired (RFC 8594).
+      schema:
+        type: string
+
   schemas:
     Uuid:
       type: string
@@ -328,10 +541,14 @@ components:
     RequestStatus:
       type: string
       description: >
-        Portal-side status. DRAFT and RECEIVED are owned by the portal; PENDING
-        means an external system has not answered yet and the portal will retry;
-        FORWARDED means KRA has accepted the request and KVKR owns the case.
-      enum: [DRAFT, RECEIVED, PENDING, FORWARDED]
+        Portal-side status. DRAFT, RECEIVED, and EDITING are owned by the portal;
+        PENDING means an external system has not answered yet and the portal will
+        retry; FORWARDED means KRA has accepted the request and KVKR owns the case;
+        TAKE_BACK_REQUESTED means the portal has asked KRA to release the case for
+        editing. EDITING and TAKE_BACK_REQUESTED were added in 0.2.0. New values
+        may be added within v1: clients must show an unrecognized value as "status
+        not available, reload" and offer no actions.
+      enum: [DRAFT, RECEIVED, PENDING, FORWARDED, TAKE_BACK_REQUESTED, EDITING]
 
     HealthAssessmentRequest:
       type: object
@@ -344,6 +561,22 @@ components:
           const: HEALTH_ASSESSMENT
         status:
           $ref: "#/components/schemas/RequestStatus"
+        revision:
+          type: integer
+          minimum: 1
+          description: >
+            Added in 0.2.0. Revision being edited or last submitted. Starts at 1
+            and increases by one with each completed take-back.
+        takeBackAllowed:
+          type: boolean
+          description: >
+            Added in 0.2.0. Whether the owner may take the request back now. False
+            for delegates, after KRA has started processing, once the limit is
+            reached, or when KVKR cannot be reached to check.
+        lastTakeBackOutcome:
+          type: [string, "null"]
+          description: Added in 0.2.0. Result of the most recent take-back, if any.
+          enum: [COMPLETED, REFUSED_BY_KRA, null]
         pendingReason:
           type: [string, "null"]
           description: Why the request is PENDING. Never contains health information.
@@ -359,9 +592,9 @@ components:
         statusSource:
           type: string
           description: >
-            PORTAL - status from the Portal Database (before forwarding).
-            KVKR_LIVE - fetched from KVKR for this response.
-            SNAPSHOT - last known status, because KVKR did not answer in time.
+            PORTAL - status from the Portal Database (before forwarding, or while
+            editing). KVKR_LIVE - fetched from KVKR for this response. SNAPSHOT -
+            last known status, because KVKR did not answer in time.
           enum: [PORTAL, KVKR_LIVE, SNAPSHOT]
         statusRetrievedAt:
           type: [string, "null"]
@@ -373,6 +606,7 @@ components:
         submittedAt:
           type: [string, "null"]
           format: date-time
+          description: When the current revision was submitted; null while it is being edited.
         actingFor:
           description: >
             Present when the caller is a delegate. Names the person represented,
@@ -387,10 +621,9 @@ components:
                 displayName:
                   type: string
 
-    SubmissionInput:
+    SubmissionForm:
       type: object
-      additionalProperties: false
-      required: [healthDataRetrievalAcknowledged]
+      description: The fields the citizen fills in.
       properties:
         healthDataRetrievalAcknowledged:
           type: boolean
@@ -406,6 +639,47 @@ components:
           type: [string, "null"]
           maxLength: 2000
           description: Free text for KRA. Should not contain health details.
+
+    SubmissionInput:
+      description: >
+        Body of a submission. Only the listed fields are accepted; anything else,
+        such as status or owner, is rejected with VALIDATION_FAILED.
+      allOf:
+        - $ref: "#/components/schemas/SubmissionForm"
+        - type: object
+          properties:
+            revision:
+              type: integer
+              minimum: 1
+              description: >
+                Added in 0.2.0. Revision being submitted. Optional within v1 and
+                treated as 1 when missing; required in v2.
+      required: [healthDataRetrievalAcknowledged]
+      unevaluatedProperties: false
+
+    SubmittedContent:
+      description: Content of one submitted or taken-back revision.
+      allOf:
+        - $ref: "#/components/schemas/SubmissionForm"
+        - type: object
+          required: [revision]
+          properties:
+            revision:
+              type: integer
+              minimum: 1
+            submittedAt:
+              type: [string, "null"]
+              format: date-time
+
+    TakeBackInput:
+      type: object
+      additionalProperties: false
+      required: [revision]
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+          description: The submitted revision to take back. Must be the current revision.
 
     Problem:
       type: object
@@ -444,6 +718,8 @@ components:
       description: >
         Stable error codes. A code never changes meaning; new codes may be added
         within v1, so clients must handle unknown codes generically.
+        REVISION_OUTDATED, REQUEST_NOT_EDITABLE, TAKE_BACK_NOT_ALLOWED, and
+        TAKE_BACK_LIMIT_REACHED were added in 0.2.0.
       enum:
         - AUTHENTICATION_REQUIRED
         - ASSURANCE_LEVEL_TOO_LOW
@@ -454,6 +730,10 @@ components:
         - VALIDATION_FAILED
         - SUBMISSION_CONFLICT
         - DRAFT_EXPIRED
+        - REVISION_OUTDATED
+        - REQUEST_NOT_EDITABLE
+        - TAKE_BACK_NOT_ALLOWED
+        - TAKE_BACK_LIMIT_REACHED
         - RATE_LIMITED
         - INTERNAL_ERROR
 
@@ -543,7 +823,7 @@ components:
           schema:
             $ref: "#/components/schemas/Problem"
     InternalError:
-      description: INTERNAL_ERROR - unexpected error. Safe to retry; submissions are idempotent.
+      description: INTERNAL_ERROR - unexpected error. Safe to retry; submissions and take-backs are idempotent.
       content:
         application/problem+json:
           schema:

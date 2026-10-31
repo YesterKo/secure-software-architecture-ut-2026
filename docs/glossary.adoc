@@ -166,6 +166,12 @@ Element names must match the Structurizr model in link:../diagrams/workspace.dsl
 |KVKR case reference
 |The identifier KVKR assigns to a case when KRA accepts a request. An external ID, stored only as a mapping to the Request ID.
 
+|Revision
+|The version number of a request's content. A draft is revision 1; each completed take-back opens the next revision. Submit and take-back calls name the revision they act on (ADR-0005).
+
+|Take back
+|The citizen's action of pulling a submitted request back to edit and resubmit it. Before KRA accepts the request the portal does it alone; afterwards KRA must release the case (ADR-0005).
+
 |Request ID
 |A random identifier the Backend Application gives a request when its form is opened. Every retry of the same submission carries the same request ID, so repeating it has no additional effect (idempotent submission). It contains no personal data.
 

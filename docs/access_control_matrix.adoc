@@ -25,6 +25,12 @@ Identifiers follow link:identity_model.adoc[identity_model.adoc]. "Owner" means 
 |Backend Application
 
 |Citizen
+|Take back, read submitted content, resubmit
+|Own health-assessment request
+|Signed in; session Citizen ID equals the request owner; the named revision is current. Take-back also needs `takeBackAllowed`: status Received or Pending, or Forwarded with KRA's release; fewer than 3 earlier take-backs (ADR-0005).
+|Backend Application
+
+|Citizen
 |Grant or revoke a delegation
 |Own delegations
 |Signed in; session Citizen ID equals the grantor; the service rules allow the action to be delegated; end date at most 12 months away.
@@ -37,13 +43,13 @@ Identifiers follow link:identity_model.adoc[identity_model.adoc]. "Owner" means 
 |Backend Application
 
 |Delegate
-|Read health information or supporting documents
+|Read health information, submitted content, or supporting documents
 |Grantor's health-assessment request
 |*Denied.* Not delegable under the service rules.
 |Backend Application
 
 |Delegate
-|Submit, withdraw, or re-delegate
+|Submit, take back, withdraw, or re-delegate
 |Grantor's request or delegation
 |*Denied.* Not delegable under the service rules.
 |Backend Application
@@ -77,5 +83,8 @@ For delegated actions, the event also records the grantor's Citizen ID and the d
 * R-001 - authorization model complexity
 * R-014 - revoked or expired delegation still works
 * R-015 - access to another citizen's request through a changed Request ID
+* R-017 - unlimited take-back and resubmission
+
+Endpoint-level checks for the Portal API are listed in link:api_security_review.adoc[api_security_review.adoc].
 
 See link:../risk/risk_register.adoc[risk/risk_register.adoc].

@@ -119,13 +119,13 @@
 |R-005 - TARA integration and authentication behavior
 
 |SG-002
-|R-001 - Authorization model complexity; R-014 - Revoked delegation still works; R-015 - Access to another citizen's request through a changed Request ID
+|R-001 - Authorization model complexity; R-014 - Revoked delegation still works; R-015 - Access to another citizen's request through a changed Request ID; R-017 - Unlimited take-back and resubmission
 
 |SG-003
 |R-004 - Incorrect data ownership; R-008 - Late privacy requirements; R-012 - Case reference mapped to the wrong request; R-013 - Personal identification code exposed through identifiers
 
 |SG-004
-|R-006 - Partial multi-system workflow failure
+|R-006 - Partial multi-system workflow failure; R-016 - Old revision reaches KVKR after take-back
 
 |SG-005
 |R-008 - Late audit and privacy requirements; R-011 - Concentrated privilege of the Backend Application

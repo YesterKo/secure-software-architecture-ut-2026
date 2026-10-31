@@ -1,0 +1,152 @@
+= API Security Review
+:toc:
+:toclevels: 2
+
+Security review of the Portal API, version 0.2.0 (link:../api/portal-api.yaml[api/portal-api.yaml]), including the take-back and resubmission change from link:../adrs/ADR-0005-take-back-and-resubmission.adoc[ADR-0005].
+The review uses the link:access_control_matrix.adoc[access control matrix], the link:security_goals.adoc[security goals], and the OWASP API Security Top 10 (2023) as a checklist.
+
+*Scope:* the internet-facing Portal API (IF-01). The internal Integration API and the external integrations are covered only where the Portal API depends on them.
+
+== Endpoint authorization checks
+
+All checks run in the *Backend Application*, in one shared authorization step that loads the request and decides before any data is read or changed (R-015).
+"Owner" means the session's Citizen ID equals the Citizen ID stored on the request. "Delegate" means a current, unrevoked delegation from the owner to the session's Citizen ID covers "view status", read from the Portal Database on every call (R-014).
+
+[cols="2,2,3,2,2",options="header"]
+|===
+|Endpoint |Allowed for |Resource-level check |Denied response |Audit
+
+|`GET /health`
+|Anyone
+|None. Returns no citizen data.
+|-
+|No
+
+|`POST /health-assessment-requests`
+|Signed-in citizen
+|Session valid, level of assurance sufficient, CSRF token valid. The draft is always created for the session's Citizen ID; no owner can be supplied in the body.
+|401 `AUTHENTICATION_REQUIRED`; 403 `ASSURANCE_LEVEL_TOO_LOW` / `CSRF_TOKEN_INVALID`
+|Yes
+
+|`GET /health-assessment-requests`
+|Owner (own list); delegate (with `delegationId`)
+|Without `delegationId`: only requests owned by the session's Citizen ID. With `delegationId`: the delegation exists, its delegate is the session's Citizen ID, it is current, and it covers "view status"; then only the grantor's requests are listed.
+|404 `DELEGATION_NOT_FOUND_OR_INACTIVE`
+|Yes for delegated lists
+
+|`GET /health-assessment-requests/+{requestId}+`
+|Owner; delegate
+|Request loaded by ID *together with* its owner; allowed if owner or delegate. The response never contains submitted content. `takeBackAllowed` is always false for a delegate.
+|404 `REQUEST_NOT_FOUND_OR_NO_ACCESS` (same as non-existent)
+|Yes, including denials
+
+|`GET /health-assessment-requests/+{requestId}+/submission`
+|Owner only
+|Owner check. A delegate who can see the request gets 403, because the content is outside their delegation; anyone else gets 404.
+|404 `REQUEST_NOT_FOUND_OR_NO_ACCESS`; 403 `NOT_DELEGABLE`
+|Yes
+
+|`PUT /health-assessment-requests/+{requestId}+/submission`
+|Owner only
+|Owner check, CSRF token, level of assurance. Status must be DRAFT or EDITING; the named revision must be the current one. The body may contain only the form fields and `revision`; status, owner, or any other field is rejected (`unevaluatedProperties: false`).
+|404; 403 `NOT_DELEGABLE`; 409 `REVISION_OUTDATED` / `REQUEST_NOT_EDITABLE`
+|Yes, with revision and content hash
+
+|`POST /health-assessment-requests/+{requestId}+/take-back`
+|Owner only
+|Owner check, CSRF token, level of assurance. Named revision is current; take-back limit not reached; status is RECEIVED, PENDING, or FORWARDED and KVKR confirms the take-back is possible (ADR-0005).
+|404; 403 `NOT_DELEGABLE`; 409 `TAKE_BACK_NOT_ALLOWED` / `REVISION_OUTDATED` / `TAKE_BACK_LIMIT_REACHED`
+|Yes, including the KRA outcome
+|===
+
+*Order of checks:* authentication → CSRF (state-changing calls) → load resource with owner → owner or delegate check → action check (delegable or not) → state and revision checks → rate limit for the action.
+Resource existence is never revealed before the owner or delegate check, so a caller who has no rights to a request gets the same 404 whether or not it exists.
+
+== Top 5 API security risks
+
+=== 1. Accessing another citizen's request (OWASP API1: Broken Object Level Authorization)
+
+*Threat:* a signed-in citizen changes the `requestId` in a URL, for example to read another person's status, read their submitted content, or take back their request.
+
+*Mitigations:*
+
+* Random Request IDs (UUIDs), never sequential or derived from personal data (identity model).
+* The shared authorization step loads every request together with its owner and checks owner or delegate before anything else; endpoints cannot skip it.
+* Same 404 for "not found" and "no access", and every denial is audited.
+* Automated test for every endpoint with a `requestId`: citizen A calls it with citizen B's ID and must get the 404 with no data (R-015).
+
+=== 2. A delegate performing owner-only actions (OWASP API5: Broken Function Level Authorization)
+
+*Threat:* a delegate, who may legitimately see a request, calls owner-only functions: reading the submitted content, resubmitting, or using the new take-back endpoint. A revoked delegate keeps using old links.
+
+*Mitigations:*
+
+* Each endpoint declares which actions it performs, and the authorization step checks the action against the delegation scope, which for health-assessment requests covers only "view status".
+* Delegations are read from the Portal Database on every call, never from the session, so revocation applies on the next call (R-014).
+* Tests: a delegate calls each owner-only endpoint and gets `NOT_DELEGABLE`; a revoked delegate repeats a status call in the same session and is denied.
+
+=== 3. Session hijacking and cross-site request forgery (OWASP API2: Broken Authentication)
+
+*Threat:* an attacker steals or rides a citizen's session to submit or take back requests, for example through a malicious site that triggers a take-back in the citizen's browser.
+
+*Mitigations:*
+
+* Login only through TARA, with token validation and a required level of assurance.
+* Session cookie `__Host-` prefixed, `HttpOnly`, `Secure`, `SameSite=Lax`, with idle and absolute timeouts; a new session ID at login.
+* CSRF token required on every state-changing call (create, submit, take-back).
+* The take-back needs the current revision in the body, so a replayed old request fails with `REVISION_OUTDATED`.
+
+=== 4. Abuse of the take-back flow and resource exhaustion (OWASP API4: Unrestricted Resource Consumption, API6: Unrestricted Access to Sensitive Business Flows)
+
+*Threat:* repeated take-back and resubmission, or bursts of status reads, overload TIS, KVKR, and KRA staff, or are used to delay a process on purpose. Each resubmission triggers a new TIS request; each status read can trigger a KVKR call.
+
+*Mitigations:*
+
+* At most 3 take-backs per request; taken-back requests expire after 30 days (ADR-0005).
+* Rate limits per session and per Citizen ID, stricter for state-changing calls, returning `429 RATE_LIMITED` with `Retry-After` (SG-008).
+* Live KVKR status fetches are limited per request; within that limit the status snapshot is returned instead.
+* Forwarding runs in the background with retry limits, so a burst of submissions cannot turn into a burst of synchronous external calls.
+* Monitoring alerts on unusual take-back counts per citizen or overall (R-017).
+
+=== 5. Leaking sensitive data through responses, errors, and logs (OWASP API3: Broken Object Property Level Authorization)
+
+*Threat:* responses include more than the caller may see, for example submitted content in the status response that delegates can read. Error messages or logs reveal personal data. Mass assignment lets a client set fields such as status or owner.
+
+*Mitigations:*
+
+* Separate response schemas: status responses never contain submitted content; content is only on the owner-only submission endpoint. No health information appears in any Portal API response.
+* Request bodies accept only listed fields (`unevaluatedProperties: false`, `additionalProperties: false`); status, owner, and revision transitions are set only by the Backend Application.
+* Problem details contain a stable code and a trace ID, never personal data or request content.
+* Logs and audit events use Citizen ID, Request ID, and a content hash, never the personal identification code or the content itself; an automated scan of test-run logs checks this (R-013).
+
+=== Also considered
+
+* *Unsafe consumption of external APIs (OWASP API10):* the Integration Service validates KVKR and TIS responses against the adapter's contract and maps them to portal terms, so malformed or unexpected external data is rejected before it reaches the Backend Application (ADR-0003).
+* *Security logging and monitoring:* every authorization decision, submission, and take-back is written to the Audit Store (SG-005, QA-003). Denial spikes and rate-limit hits are monitored operationally.
+
+== Findings and follow-ups
+
+[cols="1,4,2",options="header"]
+|===
+|# |Finding |Follow-up
+
+|F-1
+|The Web Application version header used in the evolution strategy is not in the specification.
+|Add it as a common header parameter in the next spec revision.
+
+|F-2
+|Rate-limit values per endpoint are not specified.
+|Set them after the Phase 4 load tests (R-009).
+
+|F-3
+|Take-back after acceptance depends on a KVKR operation that is not confirmed.
+|Phase 1 integration PoC (R-003, ADR-0005).
+
+|F-4
+|There is no automated check yet that every endpoint goes through the shared authorization step.
+|Add the R-015 test to CI so it runs for each new endpoint.
+|===
+
+== Related risks
+
+R-013, R-014, R-015, R-016, R-017 in link:../risk/risk_register.adoc[risk/risk_register.adoc].

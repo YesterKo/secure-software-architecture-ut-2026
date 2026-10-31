@@ -93,6 +93,18 @@
 |Medium
 |High
 |Put the ownership and delegation check in one shared authorization step in the Backend Application that runs before any request data is read, instead of repeating it in each endpoint. Test: for every endpoint that takes a Request ID, sign in as citizen A and call it with citizen B's Request ID. Each call must return the same response as a non-existent ID, return no data, and create a denied audit event. Run this automatically for every new endpoint.
+
+|R-016
+|If a forward of an old revision reaches KVKR after the citizen has taken the request back, for example because a delayed or retried forward arrives late, then KRA may process content the citizen has withdrawn, or hold two versions of the same request.
+|Medium
+|High
+|Check KVKR for a case with the Request ID before accepting a take-back of a PENDING request; send the revision number with every forward and stop retries once the status changes (ADR-0005). If KVKR still receives the old revision, send the resubmission as an amendment of that case. Test: delay the KVKR mock's handling of a forward, take the request back while the forward is in flight, resubmit, and check that KRA ends with exactly one case holding the latest revision.
+
+|R-017
+|If take-back and resubmission can be repeated without limits, then a citizen or an attacker with a stolen session can create repeated load on TIS, KVKR, and KRA staff, or keep a request out of KRA's hands to delay a process.
+|Medium
+|Medium
+|Limit take-backs to 3 per request, expire taken-back requests after 30 days, rate-limit state-changing calls, and alert on unusual take-back counts (ADR-0005, link:../docs/api_security_review.adoc[API security review]). Test: the fourth take-back returns `TAKE_BACK_LIMIT_REACHED` and makes no KVKR or TIS call.
 |===
 
 == Notes

@@ -34,7 +34,7 @@ The full drivers are maintained in separate documents. This section summarizes t
 * link:quality_attributes.adoc[quality_attributes.adoc] - prioritized quality attributes and trade-offs
 * link:qa_scenarios.adoc[qa_scenarios.adoc] - quality attribute scenarios QAS-001 to QAS-004
 * link:security_goals.adoc[security_goals.adoc] - security goals, trust boundaries, data categories, attacker assumptions
-* link:../risk/risk_register.adoc[risk/risk_register.adoc] - technical risks R-001 to R-015
+* link:../risk/risk_register.adoc[risk/risk_register.adoc] - technical risks R-001 to R-017
 
 === 2.1 Business goals
 
@@ -365,7 +365,7 @@ Viewing the live status crosses two service boundaries.
 |The citizen who owns the requests (the *grantor*). They grant it in the portal after signing in through TARA. Delegations are portal-owned data, stored in the Portal Database. Legal representation such as guardianship is not covered yet (open point below).
 
 |What it covers
-|One service and a list of actions. For health-assessment requests, the service rules allow only *"view status"* to be delegated. Health information, supporting documents, and submitting or withdrawing a request are *not* delegable, because the request concerns the citizen's own health and defence obligation. A delegate cannot pass a delegation on to someone else.
+|One service and a list of actions. For health-assessment requests, the service rules allow only *"view status"* to be delegated. Health information, supporting documents, the submitted content, and submitting, taking back, or withdrawing a request are *not* delegable, because the request concerns the citizen's own health and defence obligation. A delegate cannot pass a delegation on to someone else.
 
 |When it ends
 |On the end date the grantor chooses, at most 12 months after granting, or earlier if the grantor revokes it.
@@ -396,7 +396,7 @@ The general ownership rules are in link:../adrs/ADR-0002-data-ownership.adoc[ADR
 
 |The health-assessment request and its status *before KRA accepts it*
 |Portal Database
-|Created by the Backend Application with a portal request ID. Status values: Draft, Received, Pending (waiting for an external system), Forwarded.
+|Created by the Backend Application with a portal request ID. Status values: Draft, Received, Pending (waiting for an external system), Forwarded, Take-back requested, Editing (see Taking back and resubmitting).
 
 |The case and its status *after KRA accepts it*
 |KVKR (KRA)
@@ -468,6 +468,18 @@ A failure-injection test against mock TIS and KVKR services (iteration Phase 2, 
 * How long the status snapshot is kept after a case closes depends on retention rules not yet agreed with KRA.
 * Retry limits and delays are to be set after the Phase 1 integration PoCs.
 
+==== Taking back and resubmitting
+
+Added for the Week 9 change request. The design and its alternatives are in link:../adrs/ADR-0005-take-back-and-resubmission.adoc[ADR-0005].
+
+* The citizen can take back a submitted request, edit it, and resubmit it. The request keeps its Request ID; each completed take-back opens the next *revision*.
+* *Before KRA accepts the request* (Received, Pending), the Backend Application takes it back on its own: it changes the status to Editing in the Portal Database in one step, which stops the forwarding. If a forward may already be on its way, the Integration Service first asks KVKR whether the case exists. If KVKR cannot be reached, the take-back is refused for now.
+* *After KRA accepts it* (Forwarded), KVKR owns the case, so the portal asks KRA to release it for amendment. The request becomes Take-back requested until KRA answers; then it becomes Editing, or returns to Forwarded if KRA refuses. The citizen gets a notification to log in either way.
+* *Resubmission* follows the normal path again, including a new TIS request, and names the revision being submitted. Submit and take-back are idempotent per Request ID and revision; a call naming an old revision returns `REVISION_OUTDATED`.
+* Only the owner may take back or resubmit. A request can be taken back at most 3 times, and a taken-back request expires if it is not resubmitted within 30 days.
+* Only the current revision's content is stored. Each submission and take-back creates an audit event with the revision number and a hash of the content.
+* *Test:* delay the KVKR mock's handling of a forward, take the request back while the forward is in flight, resubmit, and check that KVKR ends with exactly one case holding the latest revision and the Portal Database with one request (R-016).
+
 === Auditing and logging
 
 Audit event catalogue, integrity protection, and separation from operational logs - see R-008, R-011.
@@ -475,8 +487,10 @@ Audit event catalogue, integrity protection, and separation from operational log
 == 7. Interfaces
 
 * Interface inventory: link:interface_inventory.adoc[interface_inventory.adoc] - all key interfaces with producer, consumer, protocol, authentication, and draft versioning.
-* Portal API specification: link:../api/portal-api.yaml[api/portal-api.yaml] (OpenAPI 3.1) - health-assessment requests: create draft, submit, view status, list.
+* Portal API specification: link:../api/portal-api.yaml[api/portal-api.yaml] (OpenAPI 3.1) - health-assessment requests: create draft, submit, view status, list, take back, read submitted content (version 0.2.0).
 * Boundaries and conventions: link:../adrs/ADR-0003-interface-boundaries-and-specification.adoc[ADR-0003].
+* Evolution: link:api_evolution_strategy.adoc[api_evolution_strategy.adoc] - the 0.2.0 change, compatibility for old clients, and the deprecation timeline.
+* Security review: link:api_security_review.adoc[api_security_review.adoc] - authorization checks per endpoint and the top API security risks.
 
 == 8. Security analysis
 
@@ -519,5 +533,7 @@ _Not due at Checkpoint 1._ Expected changes include new external interface versi
 * Identity model: link:identity_model.adoc[identity_model.adoc]
 * Access control matrix: link:access_control_matrix.adoc[access_control_matrix.adoc]
 * Interface inventory: link:interface_inventory.adoc[interface_inventory.adoc]
+* API evolution strategy: link:api_evolution_strategy.adoc[api_evolution_strategy.adoc]
+* API security review: link:api_security_review.adoc[api_security_review.adoc]
 * Ownership sketch: link:ownership_sketch.adoc[ownership_sketch.adoc]
 * Iteration plan: link:iteration_plan.adoc[iteration_plan.adoc]

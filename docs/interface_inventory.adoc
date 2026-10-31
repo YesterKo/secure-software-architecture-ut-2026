@@ -18,7 +18,7 @@ Versioning approaches are a *draft* and will be refined as external interfaces a
 |HTTPS, JSON (REST)
 |Session cookie created after TARA login; CSRF token on state-changing calls. Authorization per request in the Backend Application (link:access_control_matrix.adoc[access control matrix]).
 |Major version in the path (`/api/v1`). Additive changes within a major version; consumers ignore unknown fields.
-|link:../api/portal-api.yaml[api/portal-api.yaml] (OpenAPI 3.1). The only portal interface reachable from the internet.
+|link:../api/portal-api.yaml[api/portal-api.yaml] (OpenAPI 3.1), version 0.2.0. The only portal interface reachable from the internet. Changes and compatibility: link:api_evolution_strategy.adoc[api_evolution_strategy.adoc].
 
 |IF-02
 |*Integration API*
@@ -42,7 +42,7 @@ Versioning approaches are a *draft* and will be refined as external interfaces a
 |X-tee (assumed)
 |X-tee subsystem certificates; KRA authorizes the portal subsystem per KVKR service.
 |Owned by KRA. One adapter per supported KVKR service version; contract tests per version (QA-004, R-007).
-|Forward request, look up case by Request ID (unconfirmed, R-003), fetch case status.
+|Forward request (with revision), look up case by Request ID (unconfirmed, R-003), fetch case status, release a case for amendment (needed for take-back after acceptance, unconfirmed, ADR-0005).
 
 |IF-05
 |*Estonian Defence Forces integration*

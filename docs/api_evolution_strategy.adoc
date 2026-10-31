@@ -1,0 +1,110 @@
+= API Evolution Strategy
+:toc:
+:toclevels: 2
+
+This document describes how the Portal API (link:../api/portal-api.yaml[api/portal-api.yaml]) changed for the Week 9 change request, how clients built for the previous version keep working, and when the old behaviour will be removed.
+The general rules come from link:../adrs/ADR-0003-interface-boundaries-and-specification.adoc[ADR-0003]; the design of the change is in link:../adrs/ADR-0005-take-back-and-resubmission.adoc[ADR-0005].
+
+== What changed
+
+*Change request:* a citizen can take back an already submitted health-assessment request, edit it, and resubmit it.
+
+Portal API version *0.1.0 → 0.2.0*, still under the `/api/v1` path.
+
+[cols="1,3,1",options="header"]
+|===
+|Kind |Change |Compatible?
+
+|New endpoint
+|`POST /health-assessment-requests/{requestId}/take-back` - take back a submitted revision.
+|Yes, additive
+
+|New endpoint
+|`GET /health-assessment-requests/{requestId}/submission` - read the submitted content to pre-fill the form.
+|Yes, additive
+
+|New response fields
+|`revision`, `takeBackAllowed`, `lastTakeBackOutcome` on the request.
+|Yes, additive
+
+|New response headers
+|`ETag` (current revision) on request and submission responses; `Deprecation` and `Sunset` when a client omits `revision`.
+|Yes, additive
+
+|New optional request field
+|`revision` in the submission body. Treated as 1 when missing.
+|Yes, optional
+
+|New status values
+|`TAKE_BACK_REQUESTED` and `EDITING` in `RequestStatus`.
+|Yes, under the extensible-enum rule (see below)
+
+|New error codes
+|`REVISION_OUTDATED`, `REQUEST_NOT_EDITABLE`, `TAKE_BACK_NOT_ALLOWED`, `TAKE_BACK_LIMIT_REACHED`.
+|Yes, ADR-0003 allows new codes
+
+|Changed meaning
+|The idempotency key for submission is now Request ID *plus revision* instead of Request ID alone. For revision 1 the behaviour is unchanged.
+|Yes for existing calls
+|===
+
+Nothing was removed or renamed, no field became required, and no existing status or error code changed meaning.
+
+== How old clients continue to work
+
+The only realistic 0.1.0 client is a Web Application copy that was loaded before the release and is still open in a browser tab. The Web Application and the Backend Application are otherwise released together.
+
+[cols="2,3",options="header"]
+|===
+|Situation |Behaviour for a 0.1.0 client
+
+|Creating a draft, submitting it, double-clicking Submit, viewing status, listing requests
+|Unchanged. A submission without `revision` is treated as revision 1, so the first submission and its repeats behave exactly as in 0.1.0, including `SUBMISSION_CONFLICT` for different content.
+
+|New fields and headers in responses
+|Ignored, as ADR-0003 already requires.
+
+|New status values (`EDITING`, `TAKE_BACK_REQUESTED`)
+|An old client can only see these if the citizen took the request back from an updated client, for example in another tab. ADR-0005 adds the rule that clients must show an unrecognized status as "status not available, reload" and offer no actions. The 0.1.0 Web Application does not follow this rule explicitly, so as a safeguard the Backend Application also sends a `Deprecation` header to old clients and the Web Application's version check (below) forces a reload.
+
+|Old client submits after the request was taken back elsewhere
+|The submission without `revision` is treated as revision 1, which has been superseded, so it returns `409 REVISION_OUTDATED`. The old client shows its generic error, and the reload brings in the new client. No second submission is created.
+
+|Take-back
+|Not available in the old client. Nothing is lost: the citizen sees the same request as before.
+|===
+
+*Web Application version check (planned, not yet in the specification):* each Web Application build sends its version in a request header. When the Backend Application sees a client older than the current minimum supported version, the Web Application shows "A new version of the portal is available" and reloads before the next state-changing call.
+
+*How we know who still uses the old behaviour:* every call that omits `revision` is counted in the operational metrics (no personal data, only the endpoint and client version).
+
+== Deprecation timeline
+
+Hypothetical dates, since the portal is not in production.
+
+[cols="1,3",options="header"]
+|===
+|Date |Step
+
+|2026-11-02
+|Portal API 0.2.0 released together with the updated Web Application. Omitting `revision` is deprecated: responses to such calls carry `Deprecation` and `Sunset` headers. The changelog and this document are published.
+
+|2026-11-02 → 2026-12-01
+|Monitor the count of calls without `revision`. They are expected to stop within days, as old tabs are closed or sessions expire.
+
+|2026-12-01
+|Raise the Web Application's minimum supported version to the 0.2.0 build, so any remaining old copies are forced to reload.
+
+|2027-03-01
+|Earliest date for `/api/v2`, in which `revision` is required on submission. `/api/v2` is introduced only if another breaking change needs it; this change alone does not justify a new major version.
+
+|v2 release + 3 months
+|`/api/v1` is retired. The `Sunset` header announces the exact date from the v2 release onwards.
+|===
+
+== Rules applied for future changes
+
+* Additive changes - new endpoints, optional fields, response fields, error codes, enum values in responses - stay within `/api/v1` and increase the minor version.
+* A change that removes or renames something, makes a field required, or changes the meaning of a field or code needs `/api/v2`.
+* Every change is listed in the specification's `info.description` and in this document, and the specification is linted in CI (ADR-0003 follow-up).
+* Deprecated behaviour is announced with `Deprecation` and `Sunset` headers and kept until usage reaches zero or the sunset date passes.

@@ -26,7 +26,14 @@ Each ADR should state context, decision, alternatives, consequences, and follow-
 |Interface boundaries and specification approach: contract-first OpenAPI 3.1, external formats stay in the Integration Service, problem-details errors with stable codes, path-based major versions.
 |Accepted
 |QA-004, QA-007, QA-008; SG-002, SG-003; R-007, R-013, R-015
+
+|link:ADR-0005-take-back-and-resubmission.adoc[ADR-0005]
+|Taking back and resubmitting a submitted request: same Request ID with revisions, KRA must release accepted cases, idempotency per revision, additive API change with extensible enums.
+|Accepted
+|QA-007, QA-008; SG-002, SG-004; R-003, R-016, R-017
 |===
+
+ADR-0004 is reserved for the planned identity decision below.
 
 == Planned
 

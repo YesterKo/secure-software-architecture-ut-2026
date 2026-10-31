@@ -1,0 +1,71 @@
+= ADR-0005: Taking back and resubmitting a submitted request
+:toc:
+
+== Status
+
+Accepted (2026-10-31)
+
+ADR-0004 is reserved for the planned identity, authorization, and delegation decision.
+
+== Context
+
+The instructor's change request for Week 9: *a citizen must be able to take back an already submitted form, edit it, and resubmit it.*
+For our health-assessment request this cuts across several earlier decisions:
+
+* *Data ownership (ADR-0002):* the portal owns a request only until KRA accepts it. After that KVKR owns the case. The portal cannot simply edit something it no longer owns.
+* *Accept first, forward afterwards* (link:../docs/architecture.adoc#_workflow_and_messaging[architecture.adoc, Workflow and messaging]): after "Request received", a background step forwards the request to TIS and KVKR. A take-back can arrive while that step is running, or after a forward whose reply was lost.
+* *Idempotency (QA-007, ADR-0003):* until now the Request ID alone identified "the" submission, and a second submission with different content returned `SUBMISSION_CONFLICT`. Resubmission means one request can now have several submissions.
+* *Delegation (link:../docs/access_control_matrix.adoc[access control matrix]):* submitting is not delegable, and a delegate may only view status.
+* *Interface evolution (ADR-0003):* the Portal API is `/api/v1` and may only change additively. Web Application copies left open in browser tabs still run the 0.1.0 client.
+* *Identity (link:../docs/identity_model.adoc[identity model]):* existing links - documents, notifications, audit events, the KVKR case reference mapping - all point at the Request ID.
+
+== Decision
+
+. *Same request, new revision.* Taking back and resubmitting keeps the same Request ID. Each completed take-back opens the next *revision* (1, 2, 3, ...). Documents, notifications, audit events, and the KVKR mapping stay linked through the unchanged Request ID.
+. *Who decides depends on who owns the request:*
+** *Before KRA accepts it* (RECEIVED, PENDING), the portal owns it and decides alone. The take-back is an atomic status change in the Portal Database that stops the forwarding step. If a forward to KVKR may already be on its way (PENDING with `WAITING_FOR_KVKR`), the Integration Service first asks KVKR whether a case with this Request ID exists. If it does, the request is treated as accepted (next point). If KVKR cannot be reached, the take-back is refused for now rather than guessed.
+** *After KRA accepts it* (FORWARDED), KVKR owns the case, so the portal can only *ask* KRA to release it for amendment through a new KVKR operation. The request becomes TAKE_BACK_REQUESTED. KRA's answer makes it EDITING or returns it to FORWARDED. KRA can refuse, for example once processing has started.
+** If KVKR turns out not to support a release operation (R-003), take-back is offered only before KRA has accepted the request. The API does not change: `takeBackAllowed` is simply false for FORWARDED requests.
+. *The API tells the client what is possible.* Each request carries `takeBackAllowed`, computed by the Backend Application from status, ownership, the take-back limit, and KVKR's answer. The Web Application shows the button only when it is true, but the Backend Application checks again on the call.
+. *Idempotency key becomes Request ID plus revision.* Submit and take-back both name the revision they act on. Repeats of the same call return the current result. A call naming an old revision returns `REVISION_OUTDATED`, which also covers two browser tabs editing the same request (optimistic concurrency; the revision is also the ETag).
+. *Owner only.* Take-back, reading the submitted content, and resubmission are not delegable, consistent with submission.
+. *Limits.* A request can be taken back at most 3 times, and a taken-back request that is not resubmitted within 30 days expires like a draft. Each resubmission triggers a new TIS request, so the limit protects TIS and KVKR as well as KRA staff.
+. *History without duplicate content.* Only the current revision's content is kept in the Portal Database. Each submission and take-back writes an audit event with the revision number and a hash of the submitted content, so it can later be shown what was submitted when, without storing every version (ADR-0002).
+. *Additive API change only.* The change is published as Portal API 0.2.0 inside `/api/v1`. Old clients keep working; see link:../docs/api_evolution_strategy.adoc[api_evolution_strategy.adoc]. This ADR adds one rule to ADR-0003: *enum values in responses are extensible within a major version*, and clients must show an unrecognized status as "not available, reload" and offer no actions.
+
+== Alternatives considered
+
+* *Withdraw and create a new request* (the old request is cancelled, the edit becomes a new Request ID) - simpler state model, but it breaks the links the identity model relies on: documents, notifications, audit events, and the KVKR mapping would be split over two IDs, and the citizen would see two requests for one matter. Rejected.
+* *Edit in place without taking back* (a PATCH on the submitted request) - quick for the citizen, but after acceptance KVKR owns the data and the portal cannot change it on its own (ADR-0002), and a silent change after forwarding could mean KRA works on content the citizen no longer stands behind. Rejected.
+* *Allow take-back only before forwarding* - avoids any new KVKR operation, but forwarding usually happens within seconds, so in practice the feature would almost never be usable. Kept only as the fallback if KVKR has no release operation.
+* *A new major version /api/v2* - would allow making `revision` required immediately, but nothing in the change needs a breaking change, and ADR-0003 asks for additive changes within a major version. Rejected.
+* *Store every revision in full* - complete history for disputes, but it multiplies stored personal data for little benefit. The audit hash proves the content when the citizen or KRA presents a copy. Rejected.
+
+== Consequences
+
+* Positive:
+** Citizens can correct a mistake without contacting KRA, as long as KRA has not started processing.
+** All existing links stay valid because the Request ID does not change.
+** The same revision mechanism prevents duplicates from double clicks, lost replies, and two open tabs.
+** Old clients keep working, and the change needs no new major version.
+* Negative or risks:
+** The take-back after acceptance depends on a KVKR operation that may not exist (R-003). Without it the feature is limited to the short window before forwarding.
+** A delayed forward of an old revision could still reach KVKR after the take-back was accepted, so KRA could see an outdated version (R-016).
+** Repeated take-back and resubmission creates extra load on TIS, KVKR, and KRA staff, and could be used to delay a process on purpose (R-017). The limit of 3 is a guess.
+** Two new status values may confuse clients that do not handle unknown enum values (mitigated by the extensible-enum rule and the evolution strategy).
+** The workflow has more states and transitions to test.
+* Follow-up actions:
+** Ask KRA whether KVKR can release a case for amendment, and under which conditions (add to the Phase 1 integration PoC).
+** Add the take-back race and limit tests to the Phase 2 failure-injection tests (R-016, R-017).
+** Agree with KRA whether a resubmission amends the existing KVKR case or creates a new reference; the identity model's reference-replacement handling covers either case.
+** Confirm whether a taken-back request can affect legal deadlines for the citizen.
+
+== References
+
+* link:../api/portal-api.yaml[Portal API 0.2.0]
+* link:../docs/api_evolution_strategy.adoc[API evolution strategy]
+* link:../docs/api_security_review.adoc[API security review]
+* link:ADR-0002-data-ownership.adoc[ADR-0002 - data ownership]
+* link:ADR-0003-interface-boundaries-and-specification.adoc[ADR-0003 - interface boundaries and specification]
+* link:../docs/architecture.adoc#_workflow_and_messaging[Architecture - Workflow and messaging]
+* link:../risk/risk_register.adoc[Risk register] - R-003, R-006, R-016, R-017
