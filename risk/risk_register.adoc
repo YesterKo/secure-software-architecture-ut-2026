@@ -95,16 +95,22 @@
 |Put the ownership and delegation check in one shared authorization step in the Backend Application that runs before any request data is read, instead of repeating it in each endpoint. Test: for every endpoint that takes a Request ID, sign in as citizen A and call it with citizen B's Request ID. Each call must return the same response as a non-existent ID, return no data, and create a denied audit event. Run this automatically for every new endpoint.
 
 |R-016
-|If a forward of an old revision reaches KVKR after the citizen has taken the request back, for example because a delayed or retried forward arrives late, then KRA may process content the citizen has withdrawn, or hold two versions of the same request.
+|If a forward of an old revision reaches KVKR after the citizen has taken the request back - for example because a forward whose reply was lost is still being processed when the portal asks KVKR "is there a case?" - then KRA may process content the citizen has withdrawn, or hold two versions of the same request.
 |Medium
 |High
-|Check KVKR for a case with the Request ID before accepting a take-back of a PENDING request; send the revision number with every forward and stop retries once the status changes (ADR-0005). If KVKR still receives the old revision, send the resubmission as an amendment of that case. Test: delay the KVKR mock's handling of a forward, take the request back while the forward is in flight, resubmit, and check that KRA ends with exactly one case holding the latest revision.
+|_Refined in Week 10 from the failure timeline in link:../docs/architecture.adoc#_failure_timeline_late_acceptance_of_an_old_revision[architecture.adoc]:_ a "no case" answer is not reliable while a forward may still be in flight. Design: every forward and answer carries the Request ID and revision; the Backend Application applies results only by compare-and-set on (Request ID, revision, expected status); a take-back of a request whose forward has an unknown outcome is refused until the settle window (2 × KVKR's maximum processing time) has passed and a KVKR lookup has answered (INV-2 in link:../docs/security_invariants.adoc[security invariants]). Test: KVKR mock processes a forward 50 s late and drops the reply; take back at 40 s - expect `409 TAKE_BACK_NOT_ALLOWED`; after the window the request becomes Forwarded for revision 1 without a second forward; after release and resubmission KVKR holds exactly one case with revision 2.
 
 |R-017
 |If take-back and resubmission can be repeated without limits, then a citizen or an attacker with a stolen session can create repeated load on TIS, KVKR, and KRA staff, or keep a request out of KRA's hands to delay a process.
 |Medium
 |Medium
 |Limit take-backs to 3 per request, expire taken-back requests after 30 days, rate-limit state-changing calls, and alert on unusual take-back counts (ADR-0005, link:../docs/api_security_review.adoc[API security review]). Test: the fourth take-back returns `TAKE_BACK_LIMIT_REACHED` and makes no KVKR or TIS call.
+
+|R-018
+|If a state change is committed in the Portal Database but its audit event is not written to the Audit Store - because the Audit Store is unavailable or the Backend Application stops between the two writes - or if a duplicated message writes the event twice, then the audit trail no longer matches what happened to the request (SG-005, QA-003).
+|Medium
+|High
+|Write each state change and an outbox entry in the same Portal Database transaction; an audit relay copies outbox entries to the Audit Store, which rejects a second event with the same event ID (Request ID, revision, transition); a compare-and-set that changes nothing writes no outbox entry. Alert if an event is not stored within 5 seconds (INV-3 in link:../docs/security_invariants.adoc[security invariants]). Test: make the Audit Store unavailable during a submission, deliver a KVKR release answer twice, and stop the relay between writing and marking an entry sent; expect exactly one event per state change and an alert after 5 seconds.
 |===
 
 == Notes

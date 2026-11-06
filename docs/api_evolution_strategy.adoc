@@ -16,11 +16,11 @@ Portal API version *0.1.0 → 0.2.0*, still under the `/api/v1` path.
 |Kind |Change |Compatible?
 
 |New endpoint
-|`POST /health-assessment-requests/{requestId}/take-back` - take back a submitted revision.
+|`POST /health-assessment-requests/+{requestId}+/take-back` - take back a submitted revision.
 |Yes, additive
 
 |New endpoint
-|`GET /health-assessment-requests/{requestId}/submission` - read the submitted content to pre-fill the form.
+|`GET /health-assessment-requests/+{requestId}+/submission` - read the submitted content to pre-fill the form.
 |Yes, additive
 
 |New response fields
@@ -49,6 +49,8 @@ Portal API version *0.1.0 → 0.2.0*, still under the `/api/v1` path.
 |===
 
 Nothing was removed or renamed, no field became required, and no existing status or error code changed meaning.
+
+*0.2.1 (Week 10):* a `503 TEMPORARILY_UNAVAILABLE` response and error code, used when the Backend Application cannot get a reliable answer for an authorization or state decision (link:security_invariants.adoc[security_invariants.adoc]). Additive: old clients already treat 5xx responses and unknown codes as a generic error.
 
 == How old clients continue to work
 

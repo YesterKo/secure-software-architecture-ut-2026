@@ -23,8 +23,8 @@ It integrates with KVKR (KRA), Estonian Defence Forces Systems, and the Health I
 
 == Current status
 
-* Week: 9
-* Main focus this week: API evolution and security - take-back and resubmission change (Portal API 0.2.0, ADR-0005), evolution strategy, and API security review
+* Week: 10 (Checkpoint 2 on 13 November)
+* Main focus this week: security across distributed workflows - security invariants, failure timeline for late and duplicated KVKR answers, and related risks
 * Number-one driver: QA-001 Security & Privacy of health and defence-related personal data
 * Biggest open question: do KVKR, TIS, and Estonian Defence Forces Systems provide machine-to-machine interfaces suitable for the required workflows?
 * Biggest technical risk: R-003 / R-002 - unsuitable or unavailable external-system interfaces (addressed first in iteration Phase 1)
@@ -45,6 +45,7 @@ It integrates with KVKR (KRA), Estonian Defence Forces Systems, and the Health I
 * Interface inventory: link:docs/interface_inventory.adoc[docs/interface_inventory.adoc]
 * API evolution strategy: link:docs/api_evolution_strategy.adoc[docs/api_evolution_strategy.adoc]
 * API security review: link:docs/api_security_review.adoc[docs/api_security_review.adoc]
+* Security invariants: link:docs/security_invariants.adoc[docs/security_invariants.adoc]
 * Team contract: link:docs/team_contract.adoc[docs/team_contract.adoc]
 * Risk register: link:risk/risk_register.adoc[risk/risk_register.adoc]
 * ADR index: link:adrs/README.adoc[adrs/README.adoc]

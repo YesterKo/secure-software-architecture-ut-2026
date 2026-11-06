@@ -30,7 +30,7 @@ a| * Supported authentication flows work against the TARA demo environment.
 |3
 |*Validate auditability, privacy, and interface evolution*
 |Audit-event prototype; privacy review; contract and regression tests integrated with the runnable architecture baseline.
-|R-007, R-008, R-011
+|R-007, R-008, R-011, R-018
 a| * Required security-relevant actions produce the expected audit records without unnecessary sensitive data.
 * A simulated compatible or breaking external-interface change remains isolated to the affected integration.
 * The runnable baseline incorporates the validated audit and integration behavior and remains covered by regression tests.

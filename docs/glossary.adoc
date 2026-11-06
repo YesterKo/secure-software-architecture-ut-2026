@@ -239,6 +239,15 @@ Element names must match the Structurizr model in link:../diagrams/workspace.dsl
 |Degraded mode
 |Operation where some external system is unavailable and the portal returns explicit unavailable or pending states for affected operations while unrelated workflows continue (QAS-001).
 
+|Settle window
+|The time after a forward attempt with an unknown outcome during which a "no case" answer from KVKR is not trusted, because the forward may still be processed. Set to 2 × KVKR's maximum processing time (link:security_invariants.adoc[security_invariants.adoc], INV-2).
+
+|Outbox
+|A table in the Portal Database where the Backend Application records an audit event in the same transaction as the state change it describes. An audit relay copies the entries to the Audit Store (INV-3).
+
+|Security invariant
+|A rule that must stay true even when services have different information because messages are late, lost, or repeated. See link:security_invariants.adoc[security_invariants.adoc].
+
 |Least privilege
 |Granting users and components only the access they need for their task (SG-010).
 |===

@@ -7,6 +7,8 @@ Accepted (2026-10-31)
 
 ADR-0004 is reserved for the planned identity, authorization, and delegation decision.
 
+_Refined 2026-11-06:_ the KVKR lookup before a take-back of a Pending request counts only after a settle window has passed since the last forward attempt, because an earlier "no case" answer can be wrong while a forward is still being processed. See INV-2 in link:../docs/security_invariants.adoc[security_invariants.adoc] and the failure timeline in link:../docs/architecture.adoc#_failure_timeline_late_acceptance_of_an_old_revision[architecture.adoc].
+
 == Context
 
 The instructor's change request for Week 9: *a citizen must be able to take back an already submitted form, edit it, and resubmit it.*

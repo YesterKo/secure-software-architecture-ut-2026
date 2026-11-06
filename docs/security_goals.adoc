@@ -59,6 +59,7 @@
 |Privilege misuse / insider abuse
 |===
 
+[#_trust_boundaries]
 == Trust boundaries
 
 * Citizen device ↔ Citizen Services Portal
@@ -128,7 +129,7 @@
 |R-006 - Partial multi-system workflow failure; R-016 - Old revision reaches KVKR after take-back
 
 |SG-005
-|R-008 - Late audit and privacy requirements; R-011 - Concentrated privilege of the Backend Application
+|R-018 - Audit events lost or duplicated between stores; R-008 - Late audit and privacy requirements; R-011 - Concentrated privilege of the Backend Application
 
 |SG-006
 |R-002 - TIS integration assumptions; R-003 - KVKR/Estonian Defence Forces interface assumptions; R-007 - External interface changes

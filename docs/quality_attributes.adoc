@@ -78,6 +78,7 @@
 |Infrastructure usage and operational cost must be measurable per environment and attributable to the portal's major components and external integrations.
 |===
 
+[#_trade_offs]
 == Trade-offs
 
 === Security and privacy vs. usability and performance

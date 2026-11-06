@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Citizen Services Portal API
-  version: 0.2.0
+  version: 0.2.1
   description: >
     Portal API (interface IF-01 in docs/interface_inventory.adoc), provided by the
     Backend Application and used by the Web Application. This version covers the
@@ -13,6 +13,11 @@ info:
     Changes in 0.2.0 (all additive, see docs/api_evolution_strategy.adoc and
     ADR-0005): take-back endpoint, read-back of submitted content, revision
     numbers, and two new status values. Clients built for 0.1.0 keep working.
+
+
+    Changes in 0.2.1 (additive): 503 TEMPORARILY_UNAVAILABLE when the Backend
+    Application cannot make a reliable authorization or state decision
+    (docs/security_invariants.adoc, INV-1 and INV-2).
 
 
     Conventions (ADR-0003):
@@ -116,6 +121,8 @@ paths:
           $ref: "#/components/responses/RateLimited"
         "500":
           $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/TemporarilyUnavailable"
     get:
       tags: [Health-assessment requests]
       summary: List requests
@@ -173,6 +180,8 @@ paths:
           $ref: "#/components/responses/RateLimited"
         "500":
           $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/TemporarilyUnavailable"
 
   /health-assessment-requests/{requestId}:
     parameters:
@@ -269,6 +278,8 @@ paths:
           $ref: "#/components/responses/RateLimited"
         "500":
           $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/TemporarilyUnavailable"
 
   /health-assessment-requests/{requestId}/submission:
     parameters:
@@ -305,6 +316,8 @@ paths:
           $ref: "#/components/responses/RateLimited"
         "500":
           $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/TemporarilyUnavailable"
     put:
       tags: [Health-assessment requests]
       summary: Submit or resubmit a request
@@ -400,6 +413,8 @@ paths:
           $ref: "#/components/responses/RateLimited"
         "500":
           $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/TemporarilyUnavailable"
 
   /health-assessment-requests/{requestId}/take-back:
     parameters:
@@ -489,6 +504,8 @@ paths:
           $ref: "#/components/responses/RateLimited"
         "500":
           $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/TemporarilyUnavailable"
 
 components:
   securitySchemes:
@@ -719,7 +736,8 @@ components:
         Stable error codes. A code never changes meaning; new codes may be added
         within v1, so clients must handle unknown codes generically.
         REVISION_OUTDATED, REQUEST_NOT_EDITABLE, TAKE_BACK_NOT_ALLOWED, and
-        TAKE_BACK_LIMIT_REACHED were added in 0.2.0.
+        TAKE_BACK_LIMIT_REACHED were added in 0.2.0; TEMPORARILY_UNAVAILABLE in
+        0.2.1.
       enum:
         - AUTHENTICATION_REQUIRED
         - ASSURANCE_LEVEL_TOO_LOW
@@ -736,6 +754,7 @@ components:
         - TAKE_BACK_LIMIT_REACHED
         - RATE_LIMITED
         - INTERNAL_ERROR
+        - TEMPORARILY_UNAVAILABLE
 
   responses:
     Unauthenticated:
@@ -828,3 +847,26 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
+    TemporarilyUnavailable:
+      description: >
+        TEMPORARILY_UNAVAILABLE - the Backend Application could not get a reliable
+        answer needed for the decision, for example it could not read the
+        delegation from the primary Portal Database. The call is denied rather
+        than decided on old information (fail closed); no data is returned and
+        nothing is changed. Safe to retry later.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: https://portal.example.ee/problems/temporarily-unavailable
+            title: The service is temporarily unavailable
+            status: 503
+            code: TEMPORARILY_UNAVAILABLE
+            detail: Please try again later.
+            traceId: 01JB8Z6Q3W4X5Y6Z7A8B9C0D1N

@@ -34,7 +34,7 @@ The full drivers are maintained in separate documents. This section summarizes t
 * link:quality_attributes.adoc[quality_attributes.adoc] - prioritized quality attributes and trade-offs
 * link:qa_scenarios.adoc[qa_scenarios.adoc] - quality attribute scenarios QAS-001 to QAS-004
 * link:security_goals.adoc[security_goals.adoc] - security goals, trust boundaries, data categories, attacker assumptions
-* link:../risk/risk_register.adoc[risk/risk_register.adoc] - technical risks R-001 to R-017
+* link:../risk/risk_register.adoc[risk/risk_register.adoc] - technical risks R-001 to R-018
 
 === 2.1 Business goals
 
@@ -371,7 +371,7 @@ Viewing the live status crosses two service boundaries.
 |On the end date the grantor chooses, at most 12 months after granting, or earlier if the grantor revokes it.
 
 |How revocation takes effect
-|The grantor revokes the delegation in the portal. The Backend Application marks the delegation record as revoked in the Portal Database straight away. The delegation is *not* copied into the delegate's session or into any token or cache. It is read from the Portal Database on every request, so the delegate's *next request* is denied, even within an existing session (R-014).
+|The grantor revokes the delegation in the portal. The Backend Application marks the delegation record as revoked in the Portal Database straight away. The delegation is *not* copied into the delegate's session or into any token or cache. It is read from the Portal Database on every request, so the delegate's *next request* is denied, even within an existing session (R-014). If the delegation cannot be read from the primary Portal Database, the call is denied with `503 TEMPORARILY_UNAVAILABLE` instead of being decided on old information (INV-1 in link:security_invariants.adoc[security_invariants.adoc]).
 
 |Whose actions appear in the audit record
 |Both people. Each delegated action creates an audit event with the *delegate's Citizen ID as actor*, the *grantor's Citizen ID as the person represented*, the delegation ID, the action, the Request ID, the time, and the outcome. The grantor can see these events in the transparency view (QA-009).
@@ -473,16 +473,84 @@ A failure-injection test against mock TIS and KVKR services (iteration Phase 2, 
 Added for the Week 9 change request. The design and its alternatives are in link:../adrs/ADR-0005-take-back-and-resubmission.adoc[ADR-0005].
 
 * The citizen can take back a submitted request, edit it, and resubmit it. The request keeps its Request ID; each completed take-back opens the next *revision*.
-* *Before KRA accepts the request* (Received, Pending), the Backend Application takes it back on its own: it changes the status to Editing in the Portal Database in one step, which stops the forwarding. If a forward may already be on its way, the Integration Service first asks KVKR whether the case exists. If KVKR cannot be reached, the take-back is refused for now.
+* *Before KRA accepts the request* (Received, Pending), the Backend Application takes it back on its own: it changes the status to Editing in the Portal Database in one step, which stops the forwarding. If a forward may already be on its way, the take-back waits until the *settle window* after the last forward attempt has passed, and then the Integration Service asks KVKR whether the case exists. If KVKR cannot be reached, or the window has not passed, the take-back is refused for now (INV-2 in link:security_invariants.adoc[security_invariants.adoc]).
 * *After KRA accepts it* (Forwarded), KVKR owns the case, so the portal asks KRA to release it for amendment. The request becomes Take-back requested until KRA answers; then it becomes Editing, or returns to Forwarded if KRA refuses. The citizen gets a notification to log in either way.
 * *Resubmission* follows the normal path again, including a new TIS request, and names the revision being submitted. Submit and take-back are idempotent per Request ID and revision; a call naming an old revision returns `REVISION_OUTDATED`.
 * Only the owner may take back or resubmit. A request can be taken back at most 3 times, and a taken-back request expires if it is not resubmitted within 30 days.
 * Only the current revision's content is stored. Each submission and take-back creates an audit event with the revision number and a hash of the content.
 * *Test:* delay the KVKR mock's handling of a forward, take the request back while the forward is in flight, resubmit, and check that KVKR ends with exactly one case holding the latest revision and the Portal Database with one request (R-016).
 
+[#_failure_timeline_late_acceptance_of_an_old_revision]
+==== Failure timeline: late acceptance of an old revision
+
+The rules this workflow must keep when services know different things are in link:security_invariants.adoc[security_invariants.adoc]. This timeline shows the most dangerous case for *INV-2*: KVKR accepts revision 1 late, after its reply was lost, while the citizen is trying to take the request back. It also includes a duplicated release answer from KVKR.
+
+Assumptions: the Integration Service waits 30 s for KVKR; KVKR's maximum processing time is 60 s, so the settle window is 120 s after the last forward attempt. Request ID `R`; the case reference is illustrative.
+
+[cols="1,3,3,2,3",options="header"]
+|===
+|Time |Event |What the portal knows (Portal Database) |What KVKR knows |Decision
+
+|10:00:00
+|Citizen submits revision 1.
+|`R` rev 1, Received. Outbox: "submitted r1".
+|Nothing.
+|Citizen sees "Request received".
+
+|10:00:01
+|Integration Service sends forward (`R`, rev 1) to KVKR.
+|Rev 1, Received; forward attempt started at 10:00:01.
+|Forward queued, processing slowly.
+|-
+
+|10:00:31
+|No reply within 30 s. The Integration Service reports "outcome unknown".
+|Rev 1, *Pending* (waiting for KVKR). Settle window open until 10:02:01. `takeBackAllowed` false.
+|Still processing rev 1.
+|Do not resend yet: a retry could create a second case.
+
+|10:00:40
+|Citizen presses *Take back* on a page loaded before the timeout.
+|Rev 1, Pending, forward outcome unknown, inside the settle window.
+|Still processing rev 1.
+|*Refuse* with `409 TAKE_BACK_NOT_ALLOWED`. A KVKR lookup now could say "no case" only because the forward has not finished. Citizen sees "Received - we are confirming with KRA whether your request has arrived."
+
+|10:00:55
+|KVKR finishes and creates case `KVKR-2026-005102` for rev 1. Its reply has nowhere to go.
+|Unchanged: still Pending.
+|Case exists for (`R`, rev 1).
+|-
+
+|10:02:05
+|Settle window over. The portal's retry step asks KVKR to look up `R` *before* resending.
+|Rev 1, Pending.
+|Case exists for rev 1.
+|Lookup finds the case. Compare-and-set (`R`, rev 1, Pending → *Forwarded*) succeeds; reference stored; outbox "forwarded r1". The forward is *not* sent again.
+
+|10:03:00
+|Citizen takes the request back again.
+|Rev 1, Forwarded.
+|Case for rev 1.
+|Accepted path: status *Take-back requested*; Integration Service asks KVKR to release (`R`, rev 1). Citizen sees "Waiting for KRA to release your request."
+
+|10:03:20
+|KVKR answers "released (`R`, rev 1)". The Integration Service's acknowledgement is lost, so KVKR sends the answer again at 10:03:50.
+|First answer: Take-back requested, rev 1. Second answer: *Editing, rev 2*.
+|Case released for amendment.
+|First answer: compare-and-set (`R`, rev 1, Take-back requested → Editing rev 2) succeeds; outbox "taken back r1". Second answer: no match, because the request is already at rev 2. *Ignored*, no second revision, no second audit event (INV-3).
+
+|10:10:00
+|Citizen resubmits revision 2.
+|Rev 2, Received, then Forwarded.
+|Forward (`R`, rev 2) amends the existing case.
+|One case, holding rev 2 - INV-2 holds.
+|===
+
+*Without the settle window:* at 10:00:40 a lookup would have answered "no case", the portal would have opened revision 2, and at 10:00:55 KVKR would have created a case for the withdrawn revision 1 without the portal knowing. KRA would then work on content the citizen had taken back. Refusing the take-back while the outcome is uncertain is the decision that protects INV-2 (R-016).
+
 === Auditing and logging
 
-Audit event catalogue, integrity protection, and separation from operational logs - see R-008, R-011.
+State changes and their audit events are written through an outbox in the Portal Database, so no state change exists without its audit event and a duplicate message creates no second event (INV-3 in link:security_invariants.adoc[security_invariants.adoc], R-018). Still open: the audit event catalogue, integrity protection, and separation from operational logs - see R-008, R-011.
 
 == 7. Interfaces
 
@@ -535,5 +603,6 @@ _Not due at Checkpoint 1._ Expected changes include new external interface versi
 * Interface inventory: link:interface_inventory.adoc[interface_inventory.adoc]
 * API evolution strategy: link:api_evolution_strategy.adoc[api_evolution_strategy.adoc]
 * API security review: link:api_security_review.adoc[api_security_review.adoc]
+* Security invariants: link:security_invariants.adoc[security_invariants.adoc]
 * Ownership sketch: link:ownership_sketch.adoc[ownership_sketch.adoc]
 * Iteration plan: link:iteration_plan.adoc[iteration_plan.adoc]

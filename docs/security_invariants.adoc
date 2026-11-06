@@ -1,0 +1,141 @@
+= Security Invariants
+:toc:
+:toclevels: 2
+
+These rules must stay true even when the Backend Application, the Integration Service, and KVKR have different information at the same moment - because a message is late, arrives twice, or never gets an answer.
+
+*Workflow:* a citizen submits a health-assessment request, takes it back, edits it, and resubmits it (link:architecture.adoc#_workflow_and_messaging[architecture.adoc, Workflow and messaging]; link:../adrs/ADR-0005-take-back-and-resubmission.adoc[ADR-0005]). A delegate may view the request's status (link:access_control_matrix.adoc[access control matrix]).
+
+*Features that interact:*
+
+* *Take-back with revisions* (Week 9) and *asynchronous forwarding to KVKR with retries* (Week 5): a forward of an old revision can still be in flight, or be answered late, after the citizen has taken that revision back.
+* *Delegated status viewing* (Week 7) and *revocation*: a delegate's request can be in progress, or read old data, while the grantor revokes the delegation.
+* *Duplicate or late messages* and *auditing* (QA-003): a message delivered twice must not create two state changes or two "submitted" audit events, and a state change must not be left without its audit event.
+
+The failure timeline for INV-2 is in link:architecture.adoc#_failure_timeline_late_acceptance_of_an_old_revision[architecture.adoc].
+
+== Summary
+
+[cols="1,4,2,2",options="header"]
+|===
+|ID |Rule |Owner of the fact |Checked by
+
+|INV-1
+|After a revocation is committed, no new request from the former delegate returns the grantor's data.
+|Portal Database (delegation record)
+|Backend Application, shared authorization step
+
+|INV-2
+|KRA only ever works on the citizen's current revision, and each revision causes at most one case and one accepted state change.
+|Portal Database (current revision, portal status); KVKR (whether a case exists)
+|Backend Application, when applying any result from the Integration Service
+
+|INV-3
+|Every accepted state change has exactly one audit event, even if the message that caused it is delivered twice.
+|Portal Database (state change and outbox entry); Audit Store (stored event)
+|Backend Application (outbox), audit relay
+|===
+
+== INV-1: Revocation takes effect for every new request
+
+*Rule:* once the grantor's revocation is committed in the Portal Database, every authorization decision *started after that commit* denies the former delegate access to the grantor's requests. The same holds when the delegation's end date passes.
+
+[cols="1,4",options="header"]
+|===
+|Aspect |Design
+
+|When it starts to apply
+|At the moment the revocation is committed in the Portal Database (or the end date passes). A delegate request whose authorization decision was made *before* that moment may still finish and return the status it already read; it cannot start a new read. This window is bounded by the 5-second response limit (QAS-001).
+
+|Owner of the fact
+|The Portal Database, which holds the delegation record. The Backend Application is its only writer. No copy of the delegation exists in sessions, tokens, browser storage, or caches (R-014).
+
+|Component that checks it
+|The Backend Application's shared authorization step, on every call, reading the delegation from the *primary* Portal Database, never from a read replica or cache. Delegates receive no notifications about the grantor's requests, so there is no second channel to check.
+
+|If no reliable answer is available
+|*Fail closed.* If the authorization step cannot read the delegation from the primary database within its timeout, it denies the call with `503 TEMPORARILY_UNAVAILABLE`. It does not fall back to an earlier decision. The delegate sees "The service is temporarily unavailable. Please try again later." No request data is returned, and the failed check is logged and audited.
+
+|Failure test
+a|. Grant a delegation; as the delegate, view the grantor's request - expect `200`.
+. Make the delegation read slow (fault injection on the Portal Database connection), start a delegate status call, and revoke the delegation while the call is waiting.
+. Immediately send a new status call and a list call with the `delegationId` from the *same delegate session*.
+. Make the primary Portal Database unreachable for the authorization step and repeat the status call.
+
+*Expected:* step 2's call either completes with data read *before* the revocation or is denied, never with data read after it. Step 3 returns `404 REQUEST_NOT_FOUND_OR_NO_ACCESS` and `404 DELEGATION_NOT_FOUND_OR_INACTIVE` with no data, and denial audit events. Step 4 returns `503 TEMPORARILY_UNAVAILABLE` with no data.
+|===
+
+== INV-2: KRA only works on the current revision
+
+*Rule:* for each Request ID, KRA works only on the revision the citizen most recently submitted. A forward, KVKR answer, or release answer that refers to an older revision, or that arrives a second time, never changes the request's state, never overwrites the current revision, and never leads to a second KVKR case.
+
+[cols="1,4",options="header"]
+|===
+|Aspect |Design
+
+|When it starts to apply
+|From the first forward of revision 1. It becomes critical when a take-back opens revision 2, because from then on any message about revision 1 is stale.
+
+|Owner of the fact
+a|* *Current revision and portal status:* the Portal Database (ADR-0002, ADR-0005).
+* *Whether KVKR holds a case for this request, and for which revision:* KVKR. Every forward and every answer carries the Request ID and revision, so both sides can tell which revision a message is about.
+
+|Component that checks it
+a|* The *Backend Application* applies every result from the Integration Service as a *compare-and-set* on (Request ID, revision, expected status). A result for another revision, or for a status the request has already left, changes nothing and is logged as stale.
+* The *Integration Service* sends the revision with every forward, and retries a forward only while the Backend Application still reports that revision as current.
+* A take-back of a request whose forward has an *unknown outcome* (a forward timed out without an answer) is accepted only after the *settle window* has passed: 2 × KVKR's maximum processing time after the last forward attempt (assumed 60 s, so 120 s). Only then does a "no case" answer from KVKR count as reliable.
+
+|If no reliable answer is available
+|*The request stays as it is.* Inside the settle window, or while KVKR cannot be reached, the take-back is refused with `409 TAKE_BACK_NOT_ALLOWED` and `takeBackAllowed` is false. The citizen sees "Received - we are confirming with KRA whether your request has arrived. You can take it back after that." The request is never moved to Editing on a guess.
+
+|Failure test
+a|. Configure the KVKR mock to process a forward 50 s late and to drop its reply.
+. Submit revision 1. The Integration Service times out after 30 s; the request becomes Pending.
+. At 40 s, take the request back.
+. Let the mock finish (case created for revision 1). After the settle window, let the portal's retry step run.
+. Take the request back again; have the mock answer the release twice; resubmit revision 2.
+
+*Expected:* step 3 returns `409 TAKE_BACK_NOT_ALLOWED` and the request stays Pending. Step 4 finds the case and sets the request to Forwarded for revision 1 *without* sending the forward again. In step 5, the first release answer opens revision 2 (Editing) and the duplicate changes nothing. At the end the KVKR mock holds exactly *one* case, holding revision 2, and the Portal Database holds one request at revision 2, status Forwarded.
+|===
+
+== INV-3: Exactly one audit event per accepted state change
+
+*Rule:* every accepted state change of a request - submitted, forwarded, take-back requested, taken back, resubmitted - produces exactly one audit event, even if the message that triggered it is delivered more than once. No state change exists without its audit event.
+
+[cols="1,4",options="header"]
+|===
+|Aspect |Design
+
+|When it starts to apply
+|From the first state change of a request (Draft → Received).
+
+|Owner of the fact
+|The *Portal Database* owns the state change. The *Audit Store* owns the stored audit event. Because they are separate stores (ADR-0002), the Backend Application cannot write both in one transaction.
+
+|Component that checks it
+|The *Backend Application* writes the state change and an *outbox entry* in the same Portal Database transaction, so neither exists without the other. An *audit relay* in the Backend Application copies outbox entries to the Audit Store. Each event has an ID derived from (Request ID, revision, transition), and the Audit Store rejects a second event with the same ID, so a re-sent entry or a duplicate message cannot create a second event. A compare-and-set that changes nothing (INV-2) writes no outbox entry.
+
+|If no reliable answer is available
+|If the Audit Store cannot be reached, the state change is still accepted, because the event is already durable in the outbox. The relay retries until the Audit Store confirms the write. If an event is not stored within 5 seconds (QA-003), an alert goes to the operations team. The citizen sees no difference.
+
+|Failure test
+a|. Make the Audit Store unavailable, submit a request, then restore the Audit Store.
+. Deliver the same KVKR release answer twice (as in INV-2).
+. Stop the audit relay after it writes to the Audit Store but before it marks the outbox entry as sent, then restart it.
+
+*Expected:* after step 1 the submission succeeded, an alert was raised after 5 seconds, and exactly one "submitted" event exists once the Audit Store is back. After step 2 there is exactly one "taken back" event for revision 1. After step 3 there are no duplicate events: the second write is rejected by event ID.
+|===
+
+== Assumptions and open points
+
+* The settle window depends on KVKR's maximum processing time, which is not known (R-003). If KVKR can record a withdrawal for a Request ID and revision it has not seen yet, the settle window is no longer needed.
+* KVKR is assumed to recognize a repeated forward by Request ID and revision. If it cannot, the lookup before every retry (Workflow and messaging) is the only protection.
+* The 5-second window in INV-1 is accepted as low risk: the status was readable a moment earlier.
+
+== Related risks
+
+* R-014 - revoked or expired delegation still works (INV-1)
+* R-016 - an old revision reaches KRA after take-back (INV-2, refined in Week 10)
+* R-018 - audit events lost or duplicated between the Portal Database and the Audit Store (INV-3)
+
+See link:../risk/risk_register.adoc[risk/risk_register.adoc].
