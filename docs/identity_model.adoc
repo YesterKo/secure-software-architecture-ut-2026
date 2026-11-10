@@ -84,7 +84,7 @@ The model follows three rules:
 |In the Portal Database, on the request record: Request ID, owning Citizen ID, current KVKR case reference, and the status snapshot. Earlier KVKR case references are kept as history on the same record (see <<Lifecycle change: KRA replaces its case reference>>).
 
 |Which IDs appear in public interfaces?
-|The *Request ID* appears in portal URLs and in the API used by the Web Application, for example `/requests/{requestId}`. It is random and contains no personal data. It is not a secret: every access is checked against the Citizen ID that owns the request (SG-002, SG-003), so knowing an ID does not grant access. The Request ID is also sent to KVKR with the forwarded request, so a lost reply can be checked before retrying. +
+|The *Request ID* appears in portal URLs and in the API used by the Web Application, for example `/requests/+{requestId}+`. It is random and contains no personal data. It is not a secret: every access is checked against the Citizen ID that owns the request (SG-002, SG-003), so knowing an ID does not grant access. The Request ID is also sent to KVKR with the forwarded request, so a lost reply can be checked before retrying. +
 The *KVKR case reference* is shown to the citizen as text, so they can quote it when contacting KRA. It is never used to look up a request in the portal's own URLs or API.
 
 |Label shown

@@ -23,14 +23,15 @@ It integrates with KVKR (KRA), Estonian Defence Forces Systems, and the Health I
 
 == Current status
 
-* Week: 10 (Checkpoint 2 on 13 November)
-* Main focus this week: security across distributed workflows - security invariants, failure timeline for late and duplicated KVKR answers, and related risks
+* Week: 11 (Checkpoint 2)
+* Main focus this week: Checkpoint 2 - one connected story from identity and access through the take-back API change to the late-answer failure timeline (see the walkthrough below)
 * Number-one driver: QA-001 Security & Privacy of health and defence-related personal data
 * Biggest open question: do KVKR, TIS, and Estonian Defence Forces Systems provide machine-to-machine interfaces suitable for the required workflows?
 * Biggest technical risk: R-003 / R-002 - unsuitable or unavailable external-system interfaces (addressed first in iteration Phase 1)
 
 == Important links
 
+* *Checkpoint 2 walkthrough:* link:docs/checkpoint2_walkthrough.adoc[docs/checkpoint2_walkthrough.adoc]
 * Architecture document: link:docs/architecture.adoc[docs/architecture.adoc]
 * Scenario brief: link:docs/scenario.adoc[docs/scenario.adoc]
 * Architectural drivers: link:docs/drivers.adoc[docs/drivers.adoc]

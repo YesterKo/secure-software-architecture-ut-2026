@@ -299,6 +299,7 @@ The full decision and rationale are in link:../adrs/ADR-0002-data-ownership.adoc
 
 _Not due at Checkpoint 1._ Planned: component views of the Backend Application (authorization, workflow, documents, audit) and the Integration Service (per-system adapters).
 
+[#_6_key_architectural_mechanisms]
 == 6. Key architectural mechanisms
 
 Data management and workflow are worked out below for one representative action. The other mechanisms remain placeholders with open points.
@@ -307,11 +308,13 @@ Data management and workflow are worked out below for one representative action.
 The request needs health information from the Health Information System (TIS) and is handled by KRA in KVKR.
 It crosses every container: Web Application → Backend Application → Portal Database and Document Store → Integration Service → TIS and KVKR.
 
+[#_identity_and_access]
 === Identity and access
 
 This section works through one protected action from the representative workflow: *viewing the status of a health-assessment request*. The citizen can do this directly, or a delegate can do it on the citizen's behalf.
 The identifiers used here are defined in link:identity_model.adoc[identity_model.adoc]. Who may do what is listed in link:access_control_matrix.adoc[access_control_matrix.adoc].
 
+[#_signing_in]
 ==== Signing in
 
 . The citizen chooses "Log in" in the Web Application and is redirected to TARA.
@@ -430,6 +433,7 @@ This is the behaviour required by the Week 3 scenario *"TIS unavailable during h
 
 The portal *accepts first and forwards afterwards*: the citizen's submission is confirmed as soon as it is safely stored in the portal, and the external steps (TIS, KVKR) run after that. This keeps an accepted request safe when an external system fails (QA-007) and keeps the citizen's response time independent of TIS and KVKR (QA-002).
 
+[#_normal_path]
 ==== Normal path
 
 . The citizen opens the form. The Backend Application creates a draft request with a random *request ID* in the Portal Database and returns it with the form.
@@ -468,6 +472,7 @@ A failure-injection test against mock TIS and KVKR services (iteration Phase 2, 
 * How long the status snapshot is kept after a case closes depends on retention rules not yet agreed with KRA.
 * Retry limits and delays are to be set after the Phase 1 integration PoCs.
 
+[#_taking_back_and_resubmitting]
 ==== Taking back and resubmitting
 
 Added for the Week 9 change request. The design and its alternatives are in link:../adrs/ADR-0005-take-back-and-resubmission.adoc[ADR-0005].

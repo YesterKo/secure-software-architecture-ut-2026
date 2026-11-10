@@ -108,6 +108,7 @@
 * The system will operate in a government-managed cloud or data center environment.
 * All participating agencies accept the portal’s audit and logging requirements.
 
+[#_open_questions]
 == Open questions
 
 * Which data must the portal store itself, beyond portal-owned data such as preferences, notifications, audit records, and temporary workflow state?

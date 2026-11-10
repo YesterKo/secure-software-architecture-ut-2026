@@ -1,0 +1,89 @@
+= Checkpoint 2 Walkthrough
+:toc:
+:toclevels: 2
+
+A guided route through the repository for the Checkpoint 2 presentation.
+It follows one connected story: *a citizen takes back a submitted health-assessment request to correct it*.
+Every step links to the artifact that holds the detail.
+
+== The story in one paragraph
+
+A citizen submits a health-assessment request in the Citizen Services Portal. The portal confirms it and forwards it to KRA, whose register KVKR then owns the case.
+The citizen notices a mistake and *takes the request back* to edit and resubmit it (our Week 9 change request).
+Only the owner may do this. The API change keeps old clients working, and the design must stay correct when KVKR's answers arrive late or twice.
+
+== 1. Recap: workflow and main decision
+
+* *Workflow:* submit → "Request received" → forward to TIS and KVKR in the background → KRA accepts → status from KVKR. See link:architecture.adoc#_normal_path[architecture.adoc, Normal path].
+* *Main decision from Checkpoint 1:* link:../adrs/ADR-0002-data-ownership.adoc[ADR-0002, data ownership]. KVKR, TIS, and the Estonian Defence Forces Systems stay authoritative. The portal owns a request only *until KRA accepts it*.
+* *Why it matters today:* that ownership boundary decides how a take-back works. Before acceptance the portal decides alone; after acceptance it must ask KRA.
+* Containers: link:../diagrams/c4-container.png[C4 container diagram]. The checks in this story run in the *Backend Application*; KVKR is reached only through the *Integration Service*.
+
+== 2. Identifiers, access rule, and enforcement point
+
+*Protected action:* take back a submitted health-assessment request.
+
+[cols="1,3",options="header"]
+|===
+|Item |Value
+
+|Identifiers
+|*Citizen ID* (portal-created, linked to the TARA subject), *Request ID* (random, used in the URL), *revision* (1, 2, 3, ...), *KVKR case reference* (KRA's, display only). See link:identity_model.adoc[identity_model.adoc].
+
+|Access rule
+|The caller's Citizen ID equals the request's owner; the named revision is current; `takeBackAllowed` is true. A delegate is *denied* (`403 NOT_DELEGABLE`), because a delegation for health-assessment requests covers viewing status only. See link:access_control_matrix.adoc[access_control_matrix.adoc].
+
+|Enforcement point
+|The Backend Application's shared authorization step, before any data is read. Delegations are read from the Portal Database on every call, never from the session. See link:architecture.adoc#_identity_and_access[architecture.adoc, Identity and access].
+
+|Sign-in
+|TARA (OIDC) → the Backend Application maps the TARA subject to the Citizen ID → server-side session. See link:architecture.adoc#_signing_in[Signing in].
+|===
+
+== 3. API contract, Week 9 change, existing clients
+
+* *Contract:* link:../api/portal-api.yaml[api/portal-api.yaml], version 0.2.1. See `POST /health-assessment-requests/+{requestId}+/take-back` and `PUT .../submission`.
+* *What changed in Week 9:* the take-back endpoint, read-back of submitted content, revision numbers, and the statuses `TAKE_BACK_REQUESTED` and `EDITING`.All of it is additive within `/api/v1`.See link:api_evolution_strategy.adoc[api_evolution_strategy.adoc].
+* *How an existing client is handled:* a 0.1.0 client does not send `revision`; the portal treats that as revision 1, so the old submit-and-retry flow behaves exactly as before. If an old browser tab submits after a take-back elsewhere, it gets `409 REVISION_OUTDATED` and no duplicate is created. Such calls carry `Deprecation` and `Sunset` headers.
+* *Design choices:* link:../adrs/ADR-0005-take-back-and-resubmission.adoc[ADR-0005] (same Request ID with revisions; KRA must release accepted cases). Interface conventions: link:../adrs/ADR-0003-interface-boundaries-and-specification.adoc[ADR-0003].
+* *Security review:* link:api_security_review.adoc[api_security_review.adoc], with authorization checks per endpoint and the top 5 API risks.
+
+== 4. Failure timeline, security rule, and test
+
+* *Timeline:* link:architecture.adoc#_failure_timeline_late_acceptance_of_an_old_revision[architecture.adoc, Failure timeline]. KVKR accepts revision 1 late after its reply was lost, while the citizen is trying to take the request back; later KVKR's "released" answer arrives twice.
+* *Rule it preserves:* *INV-2* in link:security_invariants.adoc[security_invariants.adoc] - KRA only ever works on the citizen's current revision, with at most one case per request.
+* *Decisions that protect it:*
+** Every message carries the Request ID and revision, and the Backend Application applies a result only if the request is still at that revision and status (compare-and-set). This makes the duplicated answer harmless.
+** While a forward's outcome is unknown, a "no case" answer from KVKR is not trusted until the *settle window* has passed, so the take-back is refused for that time. Without this, KRA could work on content the citizen had withdrawn.
+* *What the citizen sees while uncertain:* "Received - we are confirming with KRA whether your request has arrived."
+* *Proposed test:* the INV-2 failure test - the KVKR mock processes a forward 50 s late and drops the reply; a take-back at 40 s is refused; the request ends with exactly one KVKR case holding revision 2.
+
+== 5. Priority risk and treatment
+
+*R-016* in link:../risk/risk_register.adoc[risk/risk_register.adoc]: if a forward of an old revision reaches KVKR after the citizen has taken it back, KRA may process withdrawn content.
+The Week 10 timeline showed that the Week 9 treatment was not enough, so it was refined: revision checks on every result, plus the settle window, plus the timed failure test above.
+
+Related: R-018 (audit events lost or duplicated, handled with an outbox, INV-3) and R-014 (revoked delegation still works, INV-1).
+
+== 6. Question for feedback
+
+*Is a settle window an acceptable way to handle KVKR's unknown outcomes, or should we require KVKR to record a withdrawal for a revision it has not seen yet?*
+The settle window works without changes at KRA but makes the citizen wait up to about two minutes after a lost reply, and depends on a KVKR processing time we have assumed (60 s), not confirmed.
+
+== Review package
+
+[cols="2,3",options="header"]
+|===
+|Required item |Where
+
+|README linking to the work |link:../README.adoc[README.adoc]
+|Identity model |link:identity_model.adoc[identity_model.adoc]
+|Architecture: identity and access (Week 7), changes (Week 9), timeline (Week 10) |link:architecture.adoc#_identity_and_access[Identity and access], link:architecture.adoc#_taking_back_and_resubmitting[Taking back and resubmitting], link:architecture.adoc#_failure_timeline_late_acceptance_of_an_old_revision[Failure timeline]
+|Access control matrix |link:access_control_matrix.adoc[access_control_matrix.adoc]
+|Interface inventory and OpenAPI with the Week 9 change |link:interface_inventory.adoc[interface_inventory.adoc], link:../api/portal-api.yaml[api/portal-api.yaml]
+|API evolution strategy and security review |link:api_evolution_strategy.adoc[api_evolution_strategy.adoc], link:api_security_review.adoc[api_security_review.adoc]
+|Security invariants |link:security_invariants.adoc[security_invariants.adoc]
+|Risk register (R-012 to R-018 added or refined in Weeks 6-10) |link:../risk/risk_register.adoc[risk/risk_register.adoc]
+|Week 8 interface ADR and Week 9 ADR |link:../adrs/ADR-0003-interface-boundaries-and-specification.adoc[ADR-0003], link:../adrs/ADR-0005-take-back-and-resubmission.adoc[ADR-0005]
+|Earlier baseline (Weeks 1-5): diagrams, QA scenarios, decisions |link:../diagrams/README.adoc[diagrams], link:qa_scenarios.adoc[qa_scenarios.adoc], link:../adrs/README.adoc[ADR index]
+|===
