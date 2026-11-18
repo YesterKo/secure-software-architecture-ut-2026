@@ -1,39 +1,63 @@
 = Risk Analysis
+:toc:
+:toclevels: 2
 
 == Attack resistance analysis
 
 === Spoofing
 
-* **Applicable:** Login through TARA but after that we use browser sessions
-* **Attack:** Someone steals session cookie through XSS or tricks user into approving something else
-* **Countermeasures:** Shorter session lifetime, secure cookies, CSP, check for XSS. Maybe Smart-ID signing for more important actions
+Browser session key üle võtta? +
+Muidu TARA kaudu sisse logimine +
+Prg kõik apid browser sessioniga auth, aka session keyga saaks ligipääsu. Saame eeldada, et TARA ei saa spoofida meie security casei jaoks. Mis siis kui keegi teine petab välja selle info? Mida saaks teha oleks session key eluea vähendamine ja soovitaeda inimestel logida välja. XSS oleks vaja checkida, et ei saa teha. Overlay attack, kus inimene arvab, et saab endale kingi, aga hoopiski autendib mingi dokumendi? Selle puhul CSP võiks aidata. Osade asjade signimisel, nt oma terviseandmete saatmiseks võiks olla Smart-idga v millegagi signimine.
 
 === Tampering
 
-* **Applicable:** Data between portal, KVKR, TIS etc, also documents and audit logs
-* **Attack:** Changing requests or data, SQL injection, path traversal, malicious uploads. Admin messing with audit logs
-* **Countermeasures:** HTTPS, X-tee, secure internal communication too. Input validation, parameterized queries, upload limits, antivirus. Restrict audit log access
+Organisatsioonide vahel X-tee kasutusel. Eeldame, et X-tee säilitab terviklikuse. Kas turvaperimeetri sees on vaja servicite vahel hoida turvalist suhtlust?  Tähtis, et administraatorid ei saaks/ei teeks muudatusi audit logile, jälgida kellele see ligipääs. Vaja ka muretseda selle eest, et kõik userite sisendid oleksid korralikult escaped, nt SQL ja path traversal eest. Dokumentide üles laadimisel peaks olema limiit suurusel ja peaks jälgima, kas sealt annab kuidagi security perimeetrit rikkuda.
 
 === Repudiation
 
-* **Applicable:** Citizens submit requests, staff make decisions, admins change settings
-* **Attack:** User says they never submitted something, staff denies making a decision. Admin/DevOps changing settings without a trace.
-* **Countermeasures:** Audit who did what and when, protect logs from editing. How long to keep logs? Could have different retention for different events. Log config/deployment changes, signing for important actions
+Smart-IDga autentitud, kui dokument saadetud. Logifailid vaja hoida turvaliselt. Kui pikalt vaja talletada? Eri asjadel äkki eri pikkus, nt saatmine on tähtis kui mõne staatuse vaatamine. Adminide puhul? Adminide logi/audit failid. Mis siis kui devops nt muudab mingit parameetrit, mis teeb süsteemi ebaturvaliseks? Deployment logi ja branch ruleid, et ei saaks force committida. Eeldame, et välised teenused (TARA, KVKR) järgivad samu põhimõtteid.
 
 === Information Disclosure
 
-* **Applicable:** Sensitive health and defence data in the portal
-* **Attack:** Access someone else's data through API, intercept traffic, leak data through logs or URLs
-* **Countermeasures:** Check permissions on every resource request, HTTPS/X-tee, no personal IDs in URLs, avoid sensitive data in logs and notifications
+kaks võimalust: otse api kaudu info saamine ja in transit info ligipääs. Api kaudu on meil piiritletud delegaatide süsteemiga. In transit suhtes kasutame kliendi vahel HTTPS, teenustega X-teed. Peab jälgima, et stringid on escaped. Iga resurssi requestimisel peab checkima ligipääsu. URLid ei tohi sisaldada a la isikukoodi vmdgi, vaid kasutame suvalisi identifikaatoreid.
 
 === Denial of Service
 
-* **Applicable:** Public portal/backend, especially when lots of people log in around call-ups
-* **Attack:** Spam API requests, fill storage with uploads/logs, too many requests to KVKR/TIS (could even DoS them ourselves)
-* **Countermeasures:** Rate limiting, upload limits, Cloudflare or similar? Monitoring, autoscaling maybe. Limit retries/requests to external services
+Web server, backend. Logifailid saavad täis? Cloudflarei laadset toodet saaks kasutada ddosi vastu internetist ligipääsetavatele urlidele. Siis, kui õppused on tulemas, on ressursikasutus suurem. Kas oleks vaja automaatset scaleimist serviceile? Aitaks. Kas on võimalik, et hoopiski DOSime mõnda teist välist teenust? Peab uurima, mis on teiste teenuste võimekused, et vastavalt kas on vaja rate limitimist.
 
 === Elevation of Privilege
 
-* **Applicable:** Different permissions for citizens, delegates, staff and admins
-* **Attack:** Vulnerable library leading to RCE, stolen admin session, bypass role checks, changing admin flag in DB
-* **Countermeasures:** Keep libraries updated, backend permission checks. Who can give admin rights? Re-authentication for important admin actions, regular backups
+Vaja hoida koodi updated, et library vead ei annaks võimalust RCE jaoks. Kui näiteks keegi saab admin kontole ligipääsu, siis enne destruktiivse tegevuse tegemist vaja uuesti autentida. Admin sisselogimine samuti TARA kaudu. Databaasis on atribuudi järgi admin defineeritud. Peab tegema regulaarseid backuppe, et isegi kui midagi läheb kaotsi, siis oleks võimalik restoreida backupis. Kellel on ligipääsu muuta atribuudi väärtust? Kas admin saab lisada adminit? I guess mitu levelit administ.
+
+== ambiguity
+
+It’s ambiguous sometimes whether we use KVKR case reference or Request ID when communicating with KVKR, as both are sent. Which one should KVKR use? In identity_model.adoc under Lifecycle Change, it is described that both are sent to KVKR. It is also said in the previous chapter that the case reference is stored in our portal database as a mapping only. Should lifecycle change on KVKR side be handled by reference id or the fact that they know that the case reference id changed?
+
+Where is the draft application information saved? We have an api for creating a draft id, but currently the draft body must be saved on the browser session storage or some else solution, because we don’t have an api for saving a draft. For example, a person couldn’t continue a draft on another computer or browser. This behaviour is not actually defined anywhere. Why can’t draft’s be saved on server? Only api that receives actual info right now is the submit. We could/should add an endpoint to save a draft as well.
+
+What assets should be sent with the submission on API? What information can we get from terviseportaal?
+
+Takeback is right now ambiguous, as
+
+. person writes personal health info into request
+. we get personal health info from TIS
+. KVKR will get it in
+
+Okay we use option b. What ID do we use to get info from TIS? Isikukood? What happens if TIS is offline? How do we handle a takeback request if the data has not been sent to KVKR? Do we increment the revision parameter?
+
+references: architecture.adoc > Workflow and messaging
+
+“Timeout case: TIS does not answer” the requests between TIS and KVKR is unclear. It seems that both of the services are timed out in this case. We don’t use request ID for TIS, do we?
+
+=== external services
+
+main data to protect is peoples personal info. Health data is being held by TIS and requested only when a case exists. We send that health data to KVKR.
+
+Should TIS blindly trust our servers and give all data away that we request? We could let the request be signed with the user’s ID-card or Smart-ID and use that signature to get data from TIS. That way even if our servers are compromised, it is harder to get people’s data. Though, we can still get people’s data that have a signed document in our servers. Should it be possible to use the signed document for a limited time only? This depends on the expected length of downtime for TIS.
+
+For KVKR it is probably fine that we can query for any request, as there is not that much info.
+
+=== Libraries
+
+Protocols we have defined. Otherwise we haven’t actually defined what libraries or frameworks we use. What protocols we use? X-tee, OIDC, HTTPS, etc. We will assume that the transfer of data is secure. General security practices apply
